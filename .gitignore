@@ -38,3 +38,7 @@ node_modules
 .next
 .env
 .env.*
+node_modules
+.next
+.env
+.env.*
