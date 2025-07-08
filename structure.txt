@@ -1,0 +1,108 @@
+.
+├── app
+│   ├── (auth)
+│   │   ├── sign-in
+│   │   │   └── [[...sign-in]]
+│   │   └── sign-up
+│   │       └── [[...sign-up]]
+│   ├── dashboard
+│   │   ├── _components
+│   │   │   ├── Header.jsx
+│   │   │   └── Sidebar.jsx
+│   │   ├── analytics
+│   │   │   ├── focus
+│   │   │   ├── goal
+│   │   │   └── page.jsx
+│   │   ├── execute
+│   │   │   ├── page.jsx
+│   │   │   ├── session-summary
+│   │   │   ├── sounds.js
+│   │   │   └── timer-window
+│   │   ├── home
+│   │   │   ├── GoalOverview.jsx
+│   │   │   ├── goalUtils.js
+│   │   │   └── page.jsx
+│   │   ├── HowItWorks
+│   │   │   └── page.jsx
+│   │   ├── layout.jsx
+│   │   ├── motivation
+│   │   │   └── page.jsx
+│   │   ├── page.jsx
+│   │   └── TheStory
+│   │       └── page.jsx
+│   ├── favicon.ico
+│   ├── fonts
+│   │   ├── GeistMonoVF.woff
+│   │   └── GeistVF.woff
+│   ├── globals.css
+│   ├── layout.js
+│   └── page.js
+├── backend
+│   ├── absence_model.py
+│   ├── app.py
+│   ├── best_base.pt
+│   ├── best.pt
+│   ├── cellphone_model.py
+│   ├── d_test_image2.jpg
+│   ├── d_test_image3.jpg
+│   ├── debug_combined_1749491669.jpg
+│   ├── debug_combined_1749491670.jpg
+│   ├── debug_silhouette_1749493969.jpg
+│   ├── debug_silhouette_1749493970.jpg
+│   ├── debug_silhouette_1749495780.jpg
+│   ├── focusLogsDummy.py
+│   ├── test_image.jpg
+│   ├── test_yolo_inference.py
+│   └── yolov8n.pt
+├── components
+│   └── ui
+│       ├── button.jsx
+│       └── Modal.js
+├── components.json
+├── drizzle.config.js
+├── jsconfig.json
+├── lib
+│   └── utils.js
+├── logo2.jpg
+├── middleware.js
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs
+├── public
+│   ├── animations
+│   │   ├── StudyAnimation.json
+│   │   └── StudyAnimation1.json
+│   ├── IMG_0808.JPG
+│   ├── logo.jpg
+│   ├── logo2.jpg
+│   ├── logo3.png
+│   ├── logo4.png
+│   ├── logo5.png
+│   ├── logo6-2.png
+│   ├── LOGO6.png
+│   ├── logo7.png
+│   ├── sounds
+│   │   ├── birds.mp3
+│   │   ├── dark-night.mp3
+│   │   ├── end-sound.mp3
+│   │   ├── rain.mp3
+│   │   └── zzz.mp3
+│   ├── white.JPEG
+│   └── white2.jpg
+├── README.md
+├── session_1_focus_log.json
+├── session_2_focus_log.json
+├── structure.txt
+├── tailwind.config.js
+└── utils
+    ├── db.js
+    ├── fetchFocusStats.js
+    ├── fetchGoalStats.js
+    ├── fetchOverviewStats.js
+    ├── initializeDb.js
+    ├── j.py
+    ├── just.py
+    └── schema.js
+
+28 directories, 78 files
