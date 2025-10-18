@@ -8,7 +8,7 @@ import { StudyProject, StudySession } from "@/utils/schema";
 import { eq, and } from "drizzle-orm";
 import { useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaStar, FaBrain, FaClock, FaEye, FaMobileAlt, FaTint, FaSun, FaMoon } from "react-icons/fa";
+import { FaStar, FaBrain, FaClock, FaEye, FaMobileAlt, FaTint, FaSun, FaMoon, FaInfoCircle } from "react-icons/fa";
 
 // RuleCard Component
 const RuleCard = ({ ruleNumber, description, icon: Icon, transition }) => {
@@ -538,6 +538,21 @@ function ExecutePage() {
             >
               Start Your Study Session
             </motion.h2>
+
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65 }}
+              className="mb-4"
+            >
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg p-3 text-xs md:text-sm shadow-sm">
+                <FaInfoCircle className="mt-0.5 flex-shrink-0 text-amber-500" size={18} />
+                <p>
+                  The live focus-tracking AI is still rolling out to production. Sessions will run without webcam insights or adaptive nudges
+                  until the computer-vision service is deployed. We&apos;ll let you know as soon as it&apos;s live.
+                </p>
+              </div>
+            </motion.div>
 
             <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }} className="mb-4">
               <label className="block font-medium mb-1 text-gray-700 text-xs">Select Session Duration (Hours):</label>
