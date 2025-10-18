@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import Lottie from "lottie-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import VanillaTilt from "vanilla-tilt";
 import { FaEye, FaRocket, FaChartLine } from "react-icons/fa";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 // Animation variants
 const fadeInUp = {
@@ -55,24 +56,41 @@ export default function Home() {
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    let tiltNodes = [];
+
     fetch("/animations/FocusAnimation.json")
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return response.json();
       })
-      .then((data) => setFocusAnimation(data))
+      .then((data) => isMounted && setFocusAnimation(data))
       .catch((error) => console.error("Error loading focus animation:", error));
 
-    // Initialize VanillaTilt for feature cards
-    const cards = document.querySelectorAll(".cyber-card");
-    VanillaTilt.init(cards, {
-      max: 15,
-      speed: 400,
-      glare: true,
-      "max-glare": 0.3,
-    });
+    const initTilt = async () => {
+      if (typeof window === "undefined") return;
+      try {
+        const { default: VanillaTilt } = await import("vanilla-tilt");
+        if (!isMounted) return;
+        tiltNodes = Array.from(document.querySelectorAll(".cyber-card"));
+        if (!tiltNodes.length) return;
+        VanillaTilt.init(tiltNodes, {
+          max: 15,
+          speed: 400,
+          glare: true,
+          "max-glare": 0.3,
+        });
+      } catch (error) {
+        console.error("Error loading VanillaTilt:", error);
+      }
+    };
 
-    return () => cards.forEach((card) => card.vanillaTilt.destroy());
+    initTilt();
+
+    return () => {
+      isMounted = false;
+      tiltNodes.forEach((node) => node.vanillaTilt?.destroy());
+    };
   }, []);
 
   const handleImageError = (e, src) => {

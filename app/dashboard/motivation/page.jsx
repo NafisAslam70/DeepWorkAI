@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import YouTube from 'react-youtube';
 import axios from 'axios';
 
-const YOUTUBE_API_KEY = 'AIzaSyB20FC1Q-oZFriisgVcVJVlwV25UBCmUDQ'; // Replace if invalid
-const YOUTUBE_PLAYLIST_ID = 'PLriLgVg0-Kgzu0Y-Rz2ofUT1E53lUjh_T'; // Verify this is public
+const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY ?? '';
+const YOUTUBE_PLAYLIST_ID = process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID ?? '';
 
 function MotivationReels() {
   const [videos, setVideos] = useState([]);
@@ -12,6 +12,10 @@ function MotivationReels() {
 
   const fetchVideos = async () => {
     try {
+      if (!YOUTUBE_API_KEY || !YOUTUBE_PLAYLIST_ID) {
+        console.warn('YouTube env vars missing; skipping playlist fetch.');
+        return;
+      }
       console.log('Fetching videos from YouTube API...');
       const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
         params: {
@@ -38,12 +42,14 @@ function MotivationReels() {
     };
   }, []);
 
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : undefined;
   const opts = {
     height: '100%',
     width: '100%',
     playerVars: {
       autoplay: 0,
-      origin: 'http://localhost:3000', // Update for production
+      ...(origin ? { origin } : {}),
     },
   };
 

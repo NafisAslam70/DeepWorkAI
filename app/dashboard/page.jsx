@@ -9,8 +9,8 @@ import 'react-circular-progressbar/dist/styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faStar, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
-const YOUTUBE_API_KEY = 'AIzaSyB20FC1Q-oZFriisgVcVJVlwV25UBCmUDQ';
-const YOUTUBE_PLAYLIST_ID = 'PLriLgVg0-Kgzu0Y-Rz2ofUT1E53lUjh_T';
+const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY ?? '';
+const YOUTUBE_PLAYLIST_ID = process.env.NEXT_PUBLIC_YOUTUBE_PLAYLIST_ID ?? '';
 
 const quotes = [
   { text: "Deep work is the ability to focus without distraction on a cognitively demanding task.", author: "Cal Newport, Deep Work" },
@@ -39,10 +39,14 @@ function Dashboard() {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [focusStreak, setFocusStreak] = useState(5); // Mock data
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [mode, setMode] = useState(() => localStorage.getItem("themeMode") || "day");
+  const [mode, setMode] = useState("day");
 
   const fetchVideos = async () => {
     try {
+      if (!YOUTUBE_API_KEY || !YOUTUBE_PLAYLIST_ID) {
+        console.warn("YouTube env vars missing; skipping playlist fetch.");
+        return;
+      }
       const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems', {
         params: {
           part: 'snippet',
@@ -76,17 +80,33 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("themeMode", mode);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("themeMode") || "day";
+      if (stored !== mode) {
+        setMode(stored);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("themeMode", mode);
+    }
   }, [mode]);
 
   const toggleMode = () => {
     setMode((prevMode) => (prevMode === "day" ? "night" : "day"));
   };
 
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : undefined;
   const videoOpts = {
     height: '100%',
     width: '100%',
-    playerVars: { autoplay: 0, origin: 'http://localhost:3000' },
+    playerVars: {
+      autoplay: 0,
+      ...(origin ? { origin } : {}),
+    },
   };
 
   const handleVideoError = (videoId) => {

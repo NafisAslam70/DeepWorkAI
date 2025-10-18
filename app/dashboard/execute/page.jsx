@@ -57,7 +57,7 @@ function ExecutePage() {
   const [nextSessionNo, setNextSessionNo] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
-  const [mode, setMode] = useState(() => localStorage.getItem("themeMode") || "day");
+  const [mode, setMode] = useState("day");
   const userName = user?.fullName || user?.firstName || "User";
   const userEmail = user?.primaryEmailAddress?.emailAddress;
   const searchParams = useSearchParams();
@@ -100,7 +100,18 @@ function ExecutePage() {
 
   // Persist theme in localStorage
   useEffect(() => {
-    localStorage.setItem("themeMode", mode);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("themeMode") || "day";
+      if (stored !== mode) {
+        setMode(stored);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("themeMode", mode);
+    }
   }, [mode]);
 
   // Toggle between Night and Day modes

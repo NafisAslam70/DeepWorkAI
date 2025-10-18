@@ -11,6 +11,8 @@ import NudgeComponent from "../nudgeSystem";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaInfoCircle, FaPause, FaStop, FaBell, FaSun, FaMoon, FaCheckCircle, FaQuoteLeft } from "react-icons/fa";
 
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:5000").replace(/\/$/, "");
+
 // Custom Background Component for Nudge Alert Card
 const TimerBackground = ({ mode }) => {
   const particleVariants = {
@@ -104,7 +106,7 @@ function TimerWindow() {
   const tickRef = useRef(null);
   const [localNudgeEnabled, setLocalNudgeEnabled] = useState(initialNudgeEnabled);
   const [localNudgeType, setLocalNudgeType] = useState(initialNudgeType);
-  const [mode, setMode] = useState(() => localStorage.getItem("themeMode") || "night");
+  const [mode, setMode] = useState("night");
   const consecutiveLowFocusRef = useRef(0);
   const consecutiveFocusedRef = useRef(0);
   const consecutiveFaceNotVisibleRef = useRef(0);
@@ -155,7 +157,18 @@ function TimerWindow() {
   }, [playBackgroundSound, soundUrl, stop, isBreakTime]);
 
   useEffect(() => {
-    localStorage.setItem("themeMode", mode);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("themeMode") || "night";
+      if (stored !== mode) {
+        setMode(stored);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("themeMode", mode);
+    }
   }, [mode]);
 
   useEffect(() => {
@@ -235,7 +248,7 @@ function TimerWindow() {
     formData.append("image", blob, "webcam.jpg");
 
     try {
-      const res = await axios.post("http://127.0.0.1:5000/deepwork_focus", formData, {
+      const res = await axios.post(`${API_BASE_URL}/deepwork_focus`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

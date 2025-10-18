@@ -22,6 +22,8 @@ import { Bar } from "react-chartjs-2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 Modal.setAppElement("body");
 
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:5000").replace(/\/$/, "");
+
 const customStyles = {
   content: {
     position: "relative",
@@ -179,7 +181,7 @@ function SessionSummary() {
 
       try {
         await axios.post(
-          "http://127.0.0.1:5000/save_session",
+          `${API_BASE_URL}/save_session`,
           {
             projectId: parseInt(projectId),
             sessionNo,
