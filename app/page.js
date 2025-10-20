@@ -99,7 +99,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 text-gray-800 overflow-hidden font-inter flex flex-col">
+    <div className="min-h-screen w-full bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 text-gray-800 overflow-x-hidden font-inter flex flex-col">
       {/* Animated Gradient Background */}
       <motion.div
         className="absolute inset-0 z-0"
