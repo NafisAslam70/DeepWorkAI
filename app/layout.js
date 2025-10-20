@@ -23,7 +23,7 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html lang="en" className="h-full">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-x-hidden`}
         >
           {children}
         </body>
