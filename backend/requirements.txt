@@ -1,0 +1,18 @@
+# DeepWork AI - Backend Requirements
+# Python 3.10+
+
+# Web Framework
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# AI/ML
+ultralytics>=8.1.0
+mediapipe>=0.10.9
+opencv-python>=4.9.0
+
+# Image Processing
+numpy>=1.24.0
+pillow>=10.0.0
+
+# Optional: for development
+python-dotenv>=1.0.0
