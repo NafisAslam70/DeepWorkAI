@@ -4,7 +4,7 @@
 
 AI-powered productivity application with real-time focus monitoring using computer vision. Built as a Final Year Project at Universiti Sains Malaysia that won Gold.
 
-![DeepWork AI](logo2.jpg)
+![DeepWork AI](logo4.png)
 
 ## 🌟 Features
 
