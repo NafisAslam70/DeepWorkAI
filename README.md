@@ -8,7 +8,7 @@ AI-powered productivity application with real-time focus monitoring using comput
 [![Live App](https://img.shields.io/badge/Live-Vercel-black?style=for-the-badge&logo=vercel)](https://deep-work-ai-nu.vercel.app)
 [![Paper](https://img.shields.io/badge/Paper-arXiv-blue?style=for-the-badge)](docs/DLEF_Paper.pdf)
 
-![DeepWork AI](logo4.png)
+![DeepWork AI](cover.png)
 
 ---
 
