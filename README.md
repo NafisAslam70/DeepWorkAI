@@ -5,10 +5,8 @@
 AI-powered productivity application with real-time focus monitoring using computer vision. Built as a Final Year Project at Universiti Sains Malaysia.
 
 [![Demo Video](https://img.shields.io/badge/Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/Je0_qLxRbX8)
-[![Live App](https://img.shields.io/badge/Live-Vercel-black?style=for-the-badge&logo=vercel)](https://deep-
-
-[![Paper](https://img.shields.io/badge/Paper-PDF-blue?style=for-the-badge&logo=adobeacrobatreader)](https://github.com/NafisAslam70/DeepWorkAI/blob/main/docs/The_DLEF_final_paper_Augment.pdf)
-![DeepWork AI](cover.png)
+[![Live App](https://img.shields.io/badge/Live-Vercel-black?style=for-the-badge&logo=vercel)](https://deep-work-ai-nu.vercel.app)
+[![Paper](https://img.shields.io/badge/Preprint-Zenodo-blue?style=for-the-badge&logo=zenodo)](https://doi.org/10.5281/zenodo.19266394)
 
 ---
 
@@ -62,7 +60,7 @@ Webcam Frame → [L1: Classification] → [L2: Validation] → [L3: Temporal] �
 | BadPosture | 0.967 | 0.829 | 82.86% |
 | **Overall** | **0.951** | **0.948** | **94.76%** |
 
-> 📝 **Note**: Evaluated on 210 held-out validation images (35 per class, non-augmented).
+> 📝 **Note**: Evaluated on 210 held-out validation images (35 per class, non-augmented). Performance reflects same-subject validation; see paper for full scope discussion.
 
 ---
 
@@ -163,9 +161,11 @@ The demo showcases:
 
 ## 📚 Research Paper
 
-This project is accompanied by a research paper:
+This project is accompanied by a peer-preprint research paper:
 
 **"DeepLens Engine for Focus: A Multi-Layered Framework for Real-Time Attention Monitoring in Productivity Environments"**
+
+📄 [Read the Paper (Zenodo Preprint)](https://doi.org/10.5281/zenodo.19266394)
 
 The paper details:
 - Formal definitions for 6 attention states
@@ -173,8 +173,6 @@ The paper details:
 - 20/30 temporal heuristic rule
 - Experimental evaluation and ablation studies
 - Ethical considerations and limitations
-
-📄 [Read the Paper](docs/DLEF_Paper.pdf)
 
 ---
 
@@ -231,13 +229,14 @@ DeepWork AI is designed with privacy as a core principle:
 
 If you use this work in your research, please cite:
 ```bibtex
-@misc{aslam2025dlef,
+@misc{aslam2026dlef,
   author       = {Aslam, Nafis},
   title        = {DeepLens Engine for Focus: A Multi-Layered Framework for 
                   Real-Time Attention Monitoring in Productivity Environments},
-  year         = {2025},
-  publisher    = {GitHub},
-  url          = {https://github.com/NafisAslam70/DeepWorkAI}
+  year         = {2026},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.19266394},
+  url          = {https://doi.org/10.5281/zenodo.19266394}
 }
 ```
 
