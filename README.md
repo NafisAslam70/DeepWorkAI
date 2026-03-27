@@ -5,9 +5,9 @@
 AI-powered productivity application with real-time focus monitoring using computer vision. Built as a Final Year Project at Universiti Sains Malaysia.
 
 [![Demo Video](https://img.shields.io/badge/Demo-YouTube-red?style=for-the-badge&logo=youtube)](https://youtu.be/Je0_qLxRbX8)
-[![Live App](https://img.shields.io/badge/Live-Vercel-black?style=for-the-badge&logo=vercel)](https://deep-work-ai-nu.vercel.app)
-[![Paper](https://github.com/NafisAslam70/DeepWorkAI/blob/main/docs/The_DLEF_final_paper_Augment.pdf)
+[![Live App](https://img.shields.io/badge/Live-Vercel-black?style=for-the-badge&logo=vercel)](https://deep-
 
+[![Paper](https://img.shields.io/badge/Paper-PDF-blue?style=for-the-badge&logo=adobeacrobatreader)](https://github.com/NafisAslam70/DeepWorkAI/blob/main/docs/The_DLEF_final_paper_Augment.pdf)
 ![DeepWork AI](cover.png)
 
 ---
