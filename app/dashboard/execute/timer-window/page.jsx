@@ -23,6 +23,26 @@ const POMODORO_BACKGROUNDS = {
   forest: { label: "Forest", base: "bg-emerald-950", first: "bg-lime-700/40", second: "bg-emerald-600/45", overlay: "from-emerald-950/60 via-transparent to-teal-950/70" },
 };
 
+const getWorkspaceEmbedUrl = (url) => {
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) return "";
+    const videoId = parsed.hostname.includes("youtu.be") ? parsed.pathname.slice(1) : parsed.searchParams.get("v");
+    const playlistId = parsed.searchParams.get("list");
+    const isYouTube = parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be");
+    if (!isYouTube) return parsed.href;
+    if (!videoId && !playlistId) return "";
+    const params = new URLSearchParams({ autoplay: "1", rel: "0" });
+    if (playlistId) {
+      params.set("list", playlistId);
+      params.set("listType", "playlist");
+    }
+    return `https://www.youtube.com/embed/${videoId || "videoseries"}?${params.toString()}`;
+  } catch {
+    return "";
+  }
+};
+
 // Custom Background Component for Nudge Alert Card
 const TimerBackground = ({ mode }) => {
   const particleVariants = {
@@ -114,6 +134,10 @@ function TimerWindow() {
   const soundUrl = searchParams.get("sound") || "";
   const initialMonitoringEnabled = searchParams.get("monitoring") !== "false";
   const initialMotivationPlaylistEnabled = searchParams.get("music") === "motivation-playlist";
+  const focusWorkspaceEnabled = searchParams.get("workspace") === "true";
+  const focusWorkspaceUrl = searchParams.get("workspaceUrl") || "";
+  const focusWorkspaceWidth = Math.min(40, Math.max(12, parseInt(searchParams.get("workspaceWidth"), 10) || 20));
+  const focusWorkspaceEmbedUrl = getWorkspaceEmbedUrl(focusWorkspaceUrl);
   const projectId = searchParams.get("projectId") || "";
   const projectName = searchParams.get("goalName") || "";
   const sessionNo = searchParams.get("sessionNo") || "-";
@@ -130,7 +154,9 @@ function TimerWindow() {
   const [isPaused, setIsPaused] = useState(false);
   const [playEndSound] = useSound("/sounds/end-sound.mp3");
   const [selectedSound, setSelectedSound] = useState(soundUrl);
-  const [playBackgroundSound, { stop }] = useSound(selectedSound, { loop: true });
+  // `use-sound` needs a valid source on first render; an empty source never
+  // creates its Howl instance, so later selecting an ambient track cannot play.
+  const [playBackgroundSound, { stop }] = useSound(selectedSound || "/sounds/rain.mp3", { loop: true });
   const [focusStatus, setFocusStatus] = useState("Waiting...");
   const [statusReason, setStatusReason] = useState("");
   const [currentFocusLevel, setCurrentFocusLevel] = useState(0);
@@ -160,6 +186,8 @@ function TimerWindow() {
   const [isMotivationPlaylistEnabled, setIsMotivationPlaylistEnabled] = useState(initialMotivationPlaylistEnabled);
   const [pomodoroBackground, setPomodoroBackground] = useState("aurora");
   const [pomodoroLayout, setPomodoroLayout] = useState("immersive");
+  const [hasLeftFocusWorkspace, setHasLeftFocusWorkspace] = useState(false);
+  const [workspacePaneWidth, setWorkspacePaneWidth] = useState(focusWorkspaceWidth);
 
   const staticMessages = [
     "Keep phone away for focus",
@@ -210,6 +238,15 @@ function TimerWindow() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!focusWorkspaceEnabled) return undefined;
+    const markWorkspaceExit = () => {
+      if (document.hidden) setHasLeftFocusWorkspace(true);
+    };
+    document.addEventListener("visibilitychange", markWorkspaceExit);
+    return () => document.removeEventListener("visibilitychange", markWorkspaceExit);
+  }, [focusWorkspaceEnabled]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -598,6 +635,20 @@ function TimerWindow() {
     });
   };
 
+  const handleWorkspaceResizeStart = (event) => {
+    event.preventDefault();
+    const updatePaneWidth = (moveEvent) => {
+      const nextWidth = Math.min(50, Math.max(10, (moveEvent.clientX / window.innerWidth) * 100));
+      setWorkspacePaneWidth(Math.round(nextWidth));
+    };
+    const stopResizing = () => {
+      window.removeEventListener("pointermove", updatePaneWidth);
+      window.removeEventListener("pointerup", stopResizing);
+    };
+    window.addEventListener("pointermove", updatePaneWidth);
+    window.addEventListener("pointerup", stopResizing);
+  };
+
   // Fake Positive Nudge Trigger
   const triggerPositiveNudge = () => {
     const mockSummary = {
@@ -667,6 +718,7 @@ function TimerWindow() {
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const focusBlocksLeft = totalStudyPeriods - currentStudySegment + (isBreakTime ? 0 : 1);
+  const workspaceBackground = POMODORO_BACKGROUNDS[pomodoroBackground] || POMODORO_BACKGROUNDS.aurora;
 
   const glowVariants = {
     animate: {
@@ -686,6 +738,53 @@ function TimerWindow() {
       <TimerBackground mode={mode} />
 
       {!isMonitoringEnabled && <PomodoroBackground quote={motivationalQuotes[currentQuoteIndex]} variant={pomodoroBackground} />}
+
+      {focusWorkspaceEnabled && <div style={{ "--workspace-timer-width": `${workspacePaneWidth}%` }} className="fixed inset-0 z-[70] flex min-w-0 flex-col bg-slate-950 text-white sm:flex-row">
+        <aside className={`relative z-10 flex w-full flex-col justify-between border-b border-white/10 p-4 sm:min-w-[220px] sm:w-[var(--workspace-timer-width)] sm:border-b-0 sm:p-6 ${workspaceBackground.base}`}>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-teal-200">LockedIn Focus</p>
+            <p className="mt-2 truncate text-sm font-medium text-white/90">{projectName || "Your focus goal"}</p>
+            <p className="mt-1 text-xs text-slate-400">Session #{sessionNo} · {focusBlocksLeft} blocks left</p>
+          </div>
+          <div className="py-8 text-center">
+            <p className="font-sans text-5xl font-bold leading-none tracking-[-0.07em] text-white/90 sm:text-6xl">{formatTime(timeRemaining)}</p>
+            <p className="mt-3 text-xs text-teal-200">{isBreakTime ? "Break time" : `Focus block ${currentStudySegment}/${totalStudyPeriods}`}</p>
+            {hasLeftFocusWorkspace && <p className="mt-4 rounded-lg bg-amber-400/10 px-2 py-2 text-[11px] leading-relaxed text-amber-200">You left this workspace. Return to your task when you&apos;re ready.</p>}
+          </div>
+          <div className="space-y-3">
+            <button onClick={handlePauseSession} className="w-full rounded-xl bg-indigo-500 px-3 py-2.5 text-sm font-medium hover:bg-indigo-400"><FaPause className="mr-2 inline" />{isPaused ? "Resume" : "Pause"}</button>
+            <p className="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-center text-[10px] leading-relaxed text-slate-400">LockedIn Focus stays active until the session is complete. Leaving this window triggers a browser confirmation.</p>
+            <details className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs text-slate-200">
+              <summary className="cursor-pointer font-medium text-teal-100">Sound & appearance</summary>
+              <div className="mt-3 space-y-2">
+                <label className="block text-[11px] text-slate-300">Ambient sound
+                  <select value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-white/10 p-2 text-xs text-white outline-none">
+                    <option value="">No sound</option>
+                    {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
+                  </select>
+                </label>
+                <label className="block text-[11px] text-slate-300">Panel design
+                  <select value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-white/10 p-2 text-xs text-white outline-none">
+                    {Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}
+                  </select>
+                </label>
+              </div>
+            </details>
+          </div>
+        </aside>
+        <div
+          role="separator"
+          aria-label="Resize timer panel"
+          aria-orientation="vertical"
+          onPointerDown={handleWorkspaceResizeStart}
+          className="relative z-20 hidden w-2 shrink-0 cursor-col-resize bg-white/10 transition-colors hover:bg-teal-300/60 sm:block"
+        >
+          <span className="absolute left-1/2 top-1/2 h-12 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/60" />
+        </div>
+        <section className="relative min-w-0 flex-1 bg-black">
+          {focusWorkspaceEmbedUrl ? <iframe title="Focus Workspace content" src={focusWorkspaceEmbedUrl} className="h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <div className="flex h-full items-center justify-center p-8 text-center"><div><p className="text-lg font-semibold">This link can’t be opened in Focus Workspace.</p><p className="mt-2 text-sm text-slate-400">Use a valid webpage, YouTube video, or playlist link.</p></div></div>}
+        </section>
+      </div>}
 
       {/* Theme Toggle */}
       <motion.div

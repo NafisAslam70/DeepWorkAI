@@ -51,6 +51,9 @@ function ExecutePage() {
   const [selectedSound, setSelectedSound] = useState("");
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
   const [nudgeType, setNudgeType] = useState("text_with_sound");
+  const [focusWorkspaceEnabled, setFocusWorkspaceEnabled] = useState(false);
+  const [focusWorkspaceUrl, setFocusWorkspaceUrl] = useState("");
+  const [focusWorkspaceTimerWidth, setFocusWorkspaceTimerWidth] = useState(10);
   const [goalDetails, setGoalDetails] = useState(null);
   const [userGoals, setUserGoals] = useState([]);
   const [loadingMessage, setLoadingMessage] = useState("Loading...");
@@ -245,15 +248,34 @@ function ExecutePage() {
       return;
     }
 
+    if (focusWorkspaceEnabled && !focusWorkspaceUrl.trim()) {
+      setErrorMessage("Add a webpage, YouTube video, or playlist link for Focus Workspace, or turn the mode off.");
+      setIsErrorModalOpen(true);
+      return;
+    }
+
     setIsSessionModalOpen(false);
     const { totalSegments, studyDuration, breakDuration, nudgeEnabled, nudgeType } = sessionConfig;
     const projectId = localStorage.getItem("selectedGoalId");
     const goalName = goalDetails ? goalDetails.projectName : "Unknown";
 
+    const timerParams = new URLSearchParams({
+      study: studyDuration.toString(), break: breakDuration.toString(), segments: totalSegments.toString(), sound: selectedSound,
+      goalName, projectId: projectId || "", sessionNo: nextSessionNo.toString(), nudgeEnabled: nudgeEnabled.toString(), nudgeType,
+      workspace: focusWorkspaceEnabled.toString(), workspaceUrl: focusWorkspaceUrl, workspaceWidth: focusWorkspaceTimerWidth.toString(),
+      monitoring: focusWorkspaceEnabled ? "false" : "true",
+    });
+
+    const timerUrl = `/dashboard/execute/timer-window?${timerParams.toString()}`;
+
+    const popupFeatures = focusWorkspaceEnabled
+      ? `toolbar=no,scrollbars=no,resizable=yes,width=${window.screen.availWidth},height=${window.screen.availHeight},left=0,top=0`
+      : "toolbar=no,scrollbars=no,resizable=yes,width=800,height=600";
+
     timerWindowRef.current = window.open(
-      `/dashboard/execute/timer-window?study=${studyDuration}&break=${breakDuration}&segments=${totalSegments}&sound=${selectedSound}&goalName=${goalName}&projectId=${projectId}&sessionNo=${nextSessionNo}&nudgeEnabled=${nudgeEnabled}&nudgeType=${nudgeType}`,
+      timerUrl,
       "TimerWindow",
-      "toolbar=no,scrollbars=no,resizable=yes,width=800,height=600"
+      popupFeatures
     );
   };
 
@@ -626,6 +648,28 @@ function ExecutePage() {
                   </select>
                 </motion.div>
               )}
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.95 }} className="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/70 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-indigo-800">LockedIn Focus</p>
+                  <p className="mt-0.5 text-[11px] text-indigo-600">Keep one webpage, video, or playlist beside your timer.</p>
+                </div>
+                <button type="button" role="switch" aria-checked={focusWorkspaceEnabled} onClick={() => setFocusWorkspaceEnabled((enabled) => !enabled)} className={`h-6 w-12 rounded-full p-1 transition-colors ${focusWorkspaceEnabled ? "bg-indigo-600" : "bg-gray-400"}`}>
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${focusWorkspaceEnabled ? "translate-x-6" : "translate-x-0"}`} />
+                </button>
+              </div>
+              {focusWorkspaceEnabled && <div className="mt-3 space-y-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700">Webpage, video, or playlist link</label>
+                  <input type="url" value={focusWorkspaceUrl} onChange={(e) => setFocusWorkspaceUrl(e.target.value)} placeholder="https://example.com or a YouTube link" className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500" />
+                  <p className="mt-1 text-[10px] text-gray-500">Some websites block being opened inside another app window. YouTube works best.</p>
+                </div>
+                <label className="block text-xs font-medium text-gray-700">Timer width: {focusWorkspaceTimerWidth}%
+                  <input type="range" min="10" max="40" step="5" value={focusWorkspaceTimerWidth} onChange={(e) => setFocusWorkspaceTimerWidth(Number(e.target.value))} className="mt-2 w-full accent-indigo-600" />
+                </label>
+              </div>}
             </motion.div>
 
             <motion.div
