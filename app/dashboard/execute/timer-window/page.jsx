@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
 import useSound from "use-sound";
+import YouTube from "react-youtube";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -13,6 +14,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaInfoCircle, FaPause, FaStop, FaBell, FaSun, FaMoon, FaCheckCircle, FaQuoteLeft } from "react-icons/fa";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:5000").replace(/\/$/, "");
+const MOTIVATION_PLAYLIST_ID = "PL3DjQFxNvL5H3aO4CeAQxPuBoXrUN808G";
+const MOTIVATION_PLAYLIST_VIDEO_ID = "mo4FmEZS5RA";
 
 // Custom Background Component for Nudge Alert Card
 const TimerBackground = ({ mode }) => {
@@ -100,6 +103,7 @@ function TimerWindow() {
   const totalStudyPeriods = totalSegments * 2 - 1;
   const soundUrl = searchParams.get("sound") || "";
   const initialMonitoringEnabled = searchParams.get("monitoring") !== "false";
+  const initialMotivationPlaylistEnabled = searchParams.get("music") === "motivation-playlist";
   const projectId = searchParams.get("projectId") || "";
   const projectName = searchParams.get("goalName") || "";
   const sessionNo = searchParams.get("sessionNo") || "-";
@@ -143,6 +147,7 @@ function TimerWindow() {
   const [isAbsentMode, setIsAbsentMode] = useState(false);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isMonitoringEnabled, setIsMonitoringEnabled] = useState(initialMonitoringEnabled);
+  const [isMotivationPlaylistEnabled, setIsMotivationPlaylistEnabled] = useState(initialMotivationPlaylistEnabled);
 
   const staticMessages = [
     "Keep phone away for focus",
@@ -530,8 +535,21 @@ function TimerWindow() {
 
   const handleSoundChange = (nextSound) => {
     stop();
+    setIsMotivationPlaylistEnabled(false);
     setSelectedSound(nextSound);
     updateTimerParams("sound", nextSound);
+    updateTimerParams("music", "ambient");
+  };
+
+  const handleMusicSourceChange = (source) => {
+    const useMotivationPlaylist = source === "motivation-playlist";
+    setIsMotivationPlaylistEnabled(useMotivationPlaylist);
+    updateTimerParams("music", useMotivationPlaylist ? "motivation-playlist" : "ambient");
+    if (useMotivationPlaylist) {
+      stop();
+    } else if (selectedSound && !isBreakTime) {
+      playBackgroundSound();
+    }
   };
 
   const handleMonitoringToggle = () => {
@@ -761,8 +779,20 @@ function TimerWindow() {
         </div>
       </motion.div>}
 
-      {/* Nudge Alert Card */}
-      <Rnd default={{ x: 40, y: window.innerHeight / 2 - 210, width: 280, height: "auto" }} minWidth={220} bounds="window" enableResizing={{ bottomRight: true, right: true, bottom: true }} style={{ zIndex: 50 }}>
+      {/* The timer becomes an in-window Pomodoro panel when monitoring is off. */}
+      <Rnd
+        default={{
+          x: isMonitoringEnabled ? 40 : Math.max(20, window.innerWidth / 2 - 170),
+          y: isMonitoringEnabled ? window.innerHeight / 2 - 210 : Math.max(90, window.innerHeight / 2 - 230),
+          width: isMonitoringEnabled ? 280 : 340,
+          height: "auto",
+        }}
+        minWidth={220}
+        bounds="window"
+        disableDragging={!isMonitoringEnabled}
+        enableResizing={isMonitoringEnabled ? { bottomRight: true, right: true, bottom: true } : false}
+        style={{ zIndex: 50 }}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -772,17 +802,18 @@ function TimerWindow() {
           <div className={`p-4 ${mode === "night" ? "bg-gradient-to-r from-indigo-900/50 to-purple-900/50" : "bg-gradient-to-r from-blue-100/50 to-teal-100/50"} border-b border-white/20`}>
             <div className="flex justify-between items-center">
               <h3 className={`text-sm font-semibold flex items-center gap-2 ${mode === "night" ? "text-teal-200" : "text-teal-600"}`}>
-                <FaBell /> Nudge Alert Card
+                {isMonitoringEnabled ? <><FaBell /> Nudge Alert Card</> : <>⏱ Pomodoro Controls</>}
               </h3>
-              <motion.div
+              {isMonitoringEnabled && <motion.div
                 className={`w-12 h-6 rounded-full ${localNudgeEnabled ? (mode === "night" ? "bg-teal-500" : "bg-teal-600") : mode === "night" ? "bg-gray-600" : "bg-gray-300"} flex items-center p-1 cursor-pointer`}
                 onClick={handleNudgeToggle}
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div className="w-4 h-4 bg-white rounded-full" animate={{ x: localNudgeEnabled ? 24 : 0 }} transition={{ type: "spring", stiffness: 300 }} />
-              </motion.div>
+              </motion.div>}
             </div>
-            {localNudgeEnabled && (
+            {!isMonitoringEnabled && <p className={`mt-2 text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>A calm Pomodoro cycle with no camera tracking or nudges.</p>}
+            {isMonitoringEnabled && localNudgeEnabled && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
                 <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Nudge Type:</label>
                 <select
@@ -813,12 +844,20 @@ function TimerWindow() {
               </div>
             </div>
             <div className="mt-3">
-              <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Background sound</label>
+              <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Session music</label>
+              <select value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`mt-1 w-full rounded-lg p-1.5 text-xs ${mode === "night" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}`}>
+                <option value="ambient">Ambient sounds</option>
+                <option value="motivation-playlist">Motivation playlist (YouTube)</option>
+              </select>
+              <p className={`mt-1 text-[11px] ${mode === "night" ? "text-gray-400" : "text-gray-500"}`}>{isMotivationPlaylistEnabled ? "Your YouTube playlist is open below." : "Choose an ambient track below."}</p>
+            </div>
+            {!isMotivationPlaylistEnabled && <div className="mt-3">
+              <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Ambient track</label>
               <select value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`mt-1 w-full rounded-lg p-1.5 text-xs ${mode === "night" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}`}>
                 <option value="">No sound</option>
                 {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
               </select>
-            </div>
+            </div>}
           </div>
           <div className="p-4">
             <CircularProgressbar
@@ -859,6 +898,31 @@ function TimerWindow() {
           </div>
         </motion.div>
       </Rnd>
+
+      {isMotivationPlaylistEnabled && <Rnd
+        default={{ x: window.innerWidth * 0.37, y: 36, width: 380, height: 270 }}
+        minWidth={280}
+        minHeight={220}
+        bounds="window"
+        enableResizing={{ bottomRight: true, right: true, bottom: true }}
+        style={{ zIndex: 50 }}
+      >
+        <div className={`h-full w-full overflow-hidden rounded-xl border border-white/10 shadow-xl ${mode === "night" ? "bg-slate-900/90" : "bg-white/90"}`}>
+          <div className="flex items-center justify-between px-3 py-2">
+            <div>
+              <p className={`text-sm font-semibold ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>♫ Motivation playlist</p>
+              <p className={`text-[11px] ${mode === "night" ? "text-gray-400" : "text-gray-500"}`}>Choose a track or use YouTube&apos;s controls.</p>
+            </div>
+            <button type="button" onClick={() => handleMusicSourceChange("ambient")} className={`rounded px-2 py-1 text-xs ${mode === "night" ? "bg-white/10 text-gray-200" : "bg-gray-200 text-gray-700"}`}>Close</button>
+          </div>
+          <YouTube
+            videoId={MOTIVATION_PLAYLIST_VIDEO_ID}
+            opts={{ width: "100%", height: "100%", playerVars: { autoplay: 1, listType: "playlist", list: MOTIVATION_PLAYLIST_ID, rel: 0 } }}
+            containerClassName="h-[calc(100%-56px)] w-full"
+            className="h-full w-full"
+          />
+        </div>
+      </Rnd>}
 
       {/* DeepLens Engine Card */}
       {isMonitoringEnabled && <Rnd
