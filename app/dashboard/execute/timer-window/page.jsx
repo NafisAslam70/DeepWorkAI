@@ -784,13 +784,18 @@ function TimerWindow() {
           </div>
         </aside>
         <div
-          role="separator"
-          aria-label="Resize timer panel"
-          aria-orientation="vertical"
-          onPointerDown={handleWorkspaceResizeStart}
-          className="relative z-20 hidden w-2 shrink-0 cursor-col-resize bg-white/10 transition-colors hover:bg-teal-300/60 sm:block"
+          className="relative z-20 hidden w-px shrink-0 bg-white/10 sm:block"
         >
-          <span className="absolute left-1/2 top-1/2 h-12 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/60" />
+          <button
+            type="button"
+            role="separator"
+            aria-label="Resize timer panel"
+            aria-orientation="vertical"
+            onPointerDown={handleWorkspaceResizeStart}
+            className="absolute left-1/2 top-1/2 flex h-14 w-3 -translate-x-1/2 -translate-y-1/2 cursor-col-resize items-center justify-center rounded-full bg-white/15 opacity-70 transition hover:bg-teal-300/70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-teal-200"
+          >
+            <span className="h-8 w-px rounded-full bg-white/80" />
+          </button>
         </div>
         <section className="relative min-w-0 flex-1 bg-black">
           {focusWorkspaceEmbedUrl ? <iframe title="Focus Workspace content" src={focusWorkspaceEmbedUrl} sandbox="allow-scripts allow-same-origin allow-presentation" className="h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <div className="flex h-full items-center justify-center p-8 text-center"><div><p className="text-lg font-semibold">This link can’t be opened in Focus Workspace.</p><p className="mt-2 text-sm text-slate-400">Use a valid webpage, YouTube video, or playlist link.</p></div></div>}
