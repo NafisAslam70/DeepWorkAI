@@ -156,7 +156,8 @@ function TimerWindow() {
   const [selectedSound, setSelectedSound] = useState(soundUrl);
   // `use-sound` needs a valid source on first render; an empty source never
   // creates its Howl instance, so later selecting an ambient track cannot play.
-  const [playBackgroundSound, { stop }] = useSound(selectedSound || "/sounds/rain.mp3", { loop: true });
+  const [backgroundVolume, setBackgroundVolume] = useState(0.5);
+  const [playBackgroundSound, { stop }] = useSound(selectedSound || "/sounds/rain.mp3", { loop: true, volume: backgroundVolume });
   const [focusStatus, setFocusStatus] = useState("Waiting...");
   const [statusReason, setStatusReason] = useState("");
   const [currentFocusLevel, setCurrentFocusLevel] = useState(0);
@@ -259,6 +260,8 @@ function TimerWindow() {
     if (savedBackground && POMODORO_BACKGROUNDS[savedBackground]) setPomodoroBackground(savedBackground);
     const savedLayout = localStorage.getItem("pomodoroLayout");
     if (savedLayout === "classic" || savedLayout === "immersive") setPomodoroLayout(savedLayout);
+    const savedVolume = Number(localStorage.getItem("pomodoroVolume"));
+    if (Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1) setBackgroundVolume(savedVolume);
   }, []);
 
   const handlePomodoroBackgroundChange = (nextBackground) => {
@@ -269,6 +272,11 @@ function TimerWindow() {
   const handlePomodoroLayoutChange = (nextLayout) => {
     setPomodoroLayout(nextLayout);
     localStorage.setItem("pomodoroLayout", nextLayout);
+  };
+
+  const handleBackgroundVolumeChange = (nextVolume) => {
+    setBackgroundVolume(nextVolume);
+    localStorage.setItem("pomodoroVolume", nextVolume.toString());
   };
 
   useEffect(() => {
@@ -763,6 +771,9 @@ function TimerWindow() {
                     {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
                   </select>
                 </label>
+                <label className="block text-[11px] text-slate-300">Ambient volume: {Math.round(backgroundVolume * 100)}%
+                  <input type="range" min="0" max="1" step="0.05" value={backgroundVolume} onChange={(e) => handleBackgroundVolumeChange(Number(e.target.value))} className="mt-1 w-full accent-teal-300" />
+                </label>
                 <label className="block text-[11px] text-slate-300">Panel design
                   <select value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className="mt-1 w-full rounded-lg border border-white/15 bg-white/10 p-2 text-xs text-white outline-none">
                     {Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}
@@ -782,7 +793,7 @@ function TimerWindow() {
           <span className="absolute left-1/2 top-1/2 h-12 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/60" />
         </div>
         <section className="relative min-w-0 flex-1 bg-black">
-          {focusWorkspaceEmbedUrl ? <iframe title="Focus Workspace content" src={focusWorkspaceEmbedUrl} className="h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <div className="flex h-full items-center justify-center p-8 text-center"><div><p className="text-lg font-semibold">This link can’t be opened in Focus Workspace.</p><p className="mt-2 text-sm text-slate-400">Use a valid webpage, YouTube video, or playlist link.</p></div></div>}
+          {focusWorkspaceEmbedUrl ? <iframe title="Focus Workspace content" src={focusWorkspaceEmbedUrl} sandbox="allow-scripts allow-same-origin allow-presentation" className="h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen /> : <div className="flex h-full items-center justify-center p-8 text-center"><div><p className="text-lg font-semibold">This link can’t be opened in Focus Workspace.</p><p className="mt-2 text-sm text-slate-400">Use a valid webpage, YouTube video, or playlist link.</p></div></div>}
         </section>
       </div>}
 
@@ -1070,6 +1081,7 @@ function TimerWindow() {
             <option value="">No sound</option>
             {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
           </select>}
+          {!isMotivationPlaylistEnabled && <label className={`flex items-center gap-2 rounded-full border border-white/20 px-3 py-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>Volume <input aria-label="Ambient volume" type="range" min="0" max="1" step="0.05" value={backgroundVolume} onChange={(e) => handleBackgroundVolumeChange(Number(e.target.value))} className="w-20 accent-teal-400" /></label>}
           <select aria-label="Pomodoro background" value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className={`rounded-full border border-white/20 px-3 py-2 outline-none ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
             {Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}
           </select>
@@ -1101,6 +1113,7 @@ function TimerWindow() {
             <select aria-label="Music source" value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="ambient">Ambient sounds</option><option value="motivation-playlist">Motivation playlist</option></select>
             <select aria-label="Pomodoro layout" value={pomodoroLayout} onChange={(e) => handlePomodoroLayoutChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="immersive">Immersive layout</option><option value="classic">Classic layout</option></select>
             {!isMotivationPlaylistEnabled && <select aria-label="Ambient track" value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="">No sound</option>{sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}</select>}
+            {!isMotivationPlaylistEnabled && <label className={`rounded-lg border border-white/20 p-2 text-left ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>Volume {Math.round(backgroundVolume * 100)}%<input aria-label="Ambient volume" type="range" min="0" max="1" step="0.05" value={backgroundVolume} onChange={(e) => handleBackgroundVolumeChange(Number(e.target.value))} className="mt-1 w-full accent-teal-400" /></label>}
             <select aria-label="Pomodoro background" value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>{Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}</select>
           </div>
           <button type="button" onClick={handleMonitoringToggle} className={`mt-4 text-xs underline underline-offset-4 ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>Enable focus monitoring</button>
