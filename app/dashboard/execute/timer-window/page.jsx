@@ -8,6 +8,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { Rnd } from "react-rnd";
 import NudgeComponent from "../nudgeSystem";
+import { sounds } from "../sounds";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaInfoCircle, FaPause, FaStop, FaBell, FaSun, FaMoon, FaCheckCircle, FaQuoteLeft } from "react-icons/fa";
 
@@ -63,6 +64,31 @@ const TimerBackground = ({ mode }) => {
   );
 };
 
+const PomodoroBackground = ({ mode, quote }) => (
+  <div className={`absolute inset-0 overflow-hidden ${mode === "night" ? "bg-slate-950" : "bg-sky-50"}`}>
+    <motion.div
+      className={`absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${mode === "night" ? "bg-indigo-700/50" : "bg-sky-300/50"}`}
+      animate={{ x: [0, 180, 30], y: [0, 80, 160], scale: [1, 1.2, 0.95] }}
+      transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className={`absolute -bottom-1/3 -right-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${mode === "night" ? "bg-teal-700/45" : "bg-emerald-300/50"}`}
+      animate={{ x: [0, -160, -20], y: [0, -100, -180], scale: [1, 0.9, 1.15] }}
+      transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <div className={`absolute inset-0 bg-gradient-to-br ${mode === "night" ? "from-slate-950/50 via-transparent to-indigo-950/70" : "from-white/50 via-transparent to-teal-100/60"}`} />
+    <motion.div
+      key={quote}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`absolute inset-x-0 top-[18%] mx-auto max-w-xl px-8 text-center text-xl font-medium italic leading-relaxed ${mode === "night" ? "text-white/80" : "text-slate-700/80"}`}
+    >
+      “{quote}”
+      <p className="mt-3 text-xs not-italic uppercase tracking-[0.28em] opacity-70">Pomodoro mode · distraction-free</p>
+    </motion.div>
+  </div>
+);
+
 function TimerWindow() {
   const webcamRef = useRef(null);
   const searchParams = useSearchParams();
@@ -73,6 +99,7 @@ function TimerWindow() {
   const totalSegments = parseInt(searchParams.get("segments")) || 1;
   const totalStudyPeriods = totalSegments * 2 - 1;
   const soundUrl = searchParams.get("sound") || "";
+  const initialMonitoringEnabled = searchParams.get("monitoring") !== "false";
   const projectId = searchParams.get("projectId") || "";
   const projectName = searchParams.get("goalName") || "";
   const sessionNo = searchParams.get("sessionNo") || "-";
@@ -88,7 +115,8 @@ function TimerWindow() {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [playEndSound] = useSound("/sounds/end-sound.mp3");
-  const [playBackgroundSound, { stop }] = useSound(soundUrl, { loop: true });
+  const [selectedSound, setSelectedSound] = useState(soundUrl);
+  const [playBackgroundSound, { stop }] = useSound(selectedSound, { loop: true });
   const [focusStatus, setFocusStatus] = useState("Waiting...");
   const [statusReason, setStatusReason] = useState("");
   const [currentFocusLevel, setCurrentFocusLevel] = useState(0);
@@ -114,6 +142,7 @@ function TimerWindow() {
   const [isFocusBarsHovered, setIsFocusBarsHovered] = useState(false);
   const [isAbsentMode, setIsAbsentMode] = useState(false);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isMonitoringEnabled, setIsMonitoringEnabled] = useState(initialMonitoringEnabled);
 
   const staticMessages = [
     "Keep phone away for focus",
@@ -144,7 +173,7 @@ function TimerWindow() {
       breakDuration,
       totalSegments,
       totalStudyPeriods,
-      soundUrl,
+      soundUrl: selectedSound,
       nudgeEnabled: localNudgeEnabled,
       nudgeType: localNudgeType,
       projectId,
@@ -152,9 +181,9 @@ function TimerWindow() {
       sessionNo,
     });
 
-    if (soundUrl && !isBreakTime) playBackgroundSound();
+    if (selectedSound && !isBreakTime) playBackgroundSound();
     return () => stop();
-  }, [playBackgroundSound, soundUrl, stop, isBreakTime]);
+  }, [playBackgroundSound, selectedSound, stop, isBreakTime]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -236,7 +265,7 @@ function TimerWindow() {
   };
 
   const sendWebcamFrame = async () => {
-    if (!webcamRef.current || isBreakTime || isPaused) return;
+    if (!isMonitoringEnabled || !webcamRef.current || isBreakTime || isPaused) return;
     const screenshot = webcamRef.current.getScreenshot();
     if (!screenshot) {
       console.warn("No screenshot captured from webcam");
@@ -493,6 +522,35 @@ function TimerWindow() {
     ]);
   };
 
+  const updateTimerParams = (key, value) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
+  const handleSoundChange = (nextSound) => {
+    stop();
+    setSelectedSound(nextSound);
+    updateTimerParams("sound", nextSound);
+  };
+
+  const handleMonitoringToggle = () => {
+    setIsMonitoringEnabled((enabled) => {
+      const nextEnabled = !enabled;
+      updateTimerParams("monitoring", nextEnabled.toString());
+      if (!nextEnabled) {
+        last30Ref.current = [];
+        setFocusStatus("Monitoring off");
+        setStatusReason("Pomodoro-only session");
+        setCurrentFocusLevel(0);
+      } else {
+        setFocusStatus("Waiting...");
+        setStatusReason("");
+      }
+      return nextEnabled;
+    });
+  };
+
   // Fake Positive Nudge Trigger
   const triggerPositiveNudge = () => {
     const mockSummary = {
@@ -542,7 +600,7 @@ function TimerWindow() {
               setCurrentStudySegment((prev) => prev + 1);
               setPhaseIndex((prev) => prev + 1);
               setTimeRemaining(studyDuration * 60);
-              if (soundUrl) playBackgroundSound();
+              if (selectedSound) playBackgroundSound();
               return studyDuration * 60;
             } else {
               clearInterval(tickRef.current);
@@ -551,14 +609,14 @@ function TimerWindow() {
               return 0;
             }
           }
-          if ((prev - 1) % 15 === 0) summarize15Seconds();
+          if (isMonitoringEnabled && (prev - 1) % 15 === 0) summarize15Seconds();
           return prev - 1;
         });
       }
     }, 200);
 
     return () => clearInterval(tickRef.current);
-  }, [isPaused, isBreakTime, currentStudySegment, totalStudyPeriods, soundUrl, playBackgroundSound, playEndSound, stop]);
+  }, [isPaused, isBreakTime, currentStudySegment, totalStudyPeriods, selectedSound, isMonitoringEnabled, playBackgroundSound, playEndSound, stop]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -578,6 +636,8 @@ function TimerWindow() {
       className={`w-screen h-screen ${mode === "night" ? "bg-black" : "bg-gray-200"} text-${mode === "night" ? "gray-100" : "text-gray-800"} relative overflow-hidden`}
     >
       <TimerBackground mode={mode} />
+
+      {!isMonitoringEnabled && <PomodoroBackground mode={mode} quote={motivationalQuotes[currentQuoteIndex]} />}
 
       {/* Theme Toggle */}
       <motion.div
@@ -603,15 +663,15 @@ function TimerWindow() {
       </motion.div>
 
       {/* Fake Positive Nudge Trigger Dot */}
-      <motion.div
+      {isMonitoringEnabled && <motion.div
         className={`fixed bottom-4 left-60 w-3 h-3 rounded-full ${mode === "night" ? "bg-teal-400" : "bg-teal-500"} z-[60] cursor-pointer`}
         whileHover={{ scale: 1.5, backgroundColor: mode === "night" ? "#34d399" : "#10b981" }}
         onClick={triggerPositiveNudge}
         title="Trigger Positive Nudge (Demo)"
-      />
+      />}
 
-      {/* Enhanced Webcam Feed */}
-      <div className="relative w-full h-full z-0">
+      {/* Webcam is only active while monitoring is enabled. */}
+      {isMonitoringEnabled && <div className="relative w-full h-full z-0">
         <Webcam
           ref={webcamRef}
           audio={false}
@@ -631,10 +691,10 @@ function TimerWindow() {
             mode === "night" ? "border-gray-800/30" : "border-gray-300/30"
           } rounded-2xl z-1 shadow-[inset_0_0_5px_rgba(0,0,0,0.1)]`}
         />
-      </div>
+      </div>}
 
       {/* Focus Alert Card */}
-      <motion.div
+      {isMonitoringEnabled && <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -699,7 +759,7 @@ function TimerWindow() {
             {staticMessages[currentMessageIndex]}
           </motion.span>
         </div>
-      </motion.div>
+      </motion.div>}
 
       {/* Nudge Alert Card */}
       <Rnd default={{ x: 40, y: window.innerHeight / 2 - 210, width: 280, height: "auto" }} minWidth={220} bounds="window" enableResizing={{ bottomRight: true, right: true, bottom: true }} style={{ zIndex: 50 }}>
@@ -735,6 +795,30 @@ function TimerWindow() {
                 </select>
               </motion.div>
             )}
+            <div className="mt-3 border-t border-white/15 pt-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className={`text-xs font-semibold ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>Focus monitoring</p>
+                  <p className={`text-[11px] ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>{isMonitoringEnabled ? "Camera tracking is on" : "Pomodoro-only mode"}</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isMonitoringEnabled}
+                  onClick={handleMonitoringToggle}
+                  className={`w-12 h-6 rounded-full p-1 transition-colors ${isMonitoringEnabled ? (mode === "night" ? "bg-teal-500" : "bg-teal-600") : "bg-gray-500"}`}
+                >
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${isMonitoringEnabled ? "translate-x-6" : "translate-x-0"}`} />
+                </button>
+              </div>
+            </div>
+            <div className="mt-3">
+              <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Background sound</label>
+              <select value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`mt-1 w-full rounded-lg p-1.5 text-xs ${mode === "night" ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800"}`}>
+                <option value="">No sound</option>
+                {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
+              </select>
+            </div>
           </div>
           <div className="p-4">
             <CircularProgressbar
@@ -777,7 +861,7 @@ function TimerWindow() {
       </Rnd>
 
       {/* DeepLens Engine Card */}
-      <Rnd
+      {isMonitoringEnabled && <Rnd
         default={{ x: window.innerWidth * 0.78, y: window.innerHeight * 0.58, width: 300, height: "auto" }}
         minWidth={220}
         bounds="window"
@@ -883,7 +967,7 @@ function TimerWindow() {
             <p className={`text-center ${mode === "night" ? "text-yellow-400" : "text-yellow-600"}`}>🌟 Stay present. Stay powerful.</p>
           </div>
         </motion.div>
-      </Rnd>
+      </Rnd>}
 
       {/* Motivational Focus Quote Widget */}
       <Rnd
@@ -1041,7 +1125,7 @@ function TimerWindow() {
         )}
       </AnimatePresence>
 
-      <NudgeComponent
+      {isMonitoringEnabled && <NudgeComponent
         focusLog={focusLog}
         isBreak={isBreakTime}
         nudgeEnabled={localNudgeEnabled}
@@ -1050,7 +1134,7 @@ function TimerWindow() {
         onSessionTerminate={handleSessionEnd}
         onNudgeDisable={handleNudgeDisable}
         consecutiveFaceNotVisible={consecutiveFaceNotVisibleRef.current}
-      />
+      />}
     </div>
   );
 }
