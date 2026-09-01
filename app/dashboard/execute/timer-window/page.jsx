@@ -16,6 +16,12 @@ import { FaInfoCircle, FaPause, FaStop, FaBell, FaSun, FaMoon, FaCheckCircle, Fa
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:5000").replace(/\/$/, "");
 const MOTIVATION_PLAYLIST_ID = "PL3DjQFxNvL5H3aO4CeAQxPuBoXrUN808G";
 const MOTIVATION_PLAYLIST_VIDEO_ID = "mo4FmEZS5RA";
+const POMODORO_BACKGROUNDS = {
+  aurora: { label: "Aurora", base: "bg-slate-950", first: "bg-indigo-700/50", second: "bg-teal-700/45", overlay: "from-slate-950/50 via-transparent to-indigo-950/70" },
+  sunset: { label: "Sunset", base: "bg-rose-950", first: "bg-orange-600/45", second: "bg-fuchsia-700/40", overlay: "from-rose-950/60 via-transparent to-orange-950/70" },
+  ocean: { label: "Ocean", base: "bg-cyan-950", first: "bg-sky-600/45", second: "bg-blue-700/45", overlay: "from-cyan-950/60 via-transparent to-blue-950/70" },
+  forest: { label: "Forest", base: "bg-emerald-950", first: "bg-lime-700/40", second: "bg-emerald-600/45", overlay: "from-emerald-950/60 via-transparent to-teal-950/70" },
+};
 
 // Custom Background Component for Nudge Alert Card
 const TimerBackground = ({ mode }) => {
@@ -67,33 +73,37 @@ const TimerBackground = ({ mode }) => {
   );
 };
 
-const PomodoroBackground = ({ mode, quote }) => (
-  <div className={`absolute inset-0 overflow-hidden ${mode === "night" ? "bg-slate-950" : "bg-sky-50"}`}>
+const PomodoroBackground = ({ quote, variant }) => {
+  const background = POMODORO_BACKGROUNDS[variant] || POMODORO_BACKGROUNDS.aurora;
+
+  return <div className={`absolute inset-0 overflow-hidden ${background.base}`}>
     <motion.div
-      className={`absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${mode === "night" ? "bg-indigo-700/50" : "bg-sky-300/50"}`}
+      className={`absolute -left-1/4 -top-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${background.first}`}
       animate={{ x: [0, 180, 30], y: [0, 80, 160], scale: [1, 1.2, 0.95] }}
       transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
     />
     <motion.div
-      className={`absolute -bottom-1/3 -right-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${mode === "night" ? "bg-teal-700/45" : "bg-emerald-300/50"}`}
+      className={`absolute -bottom-1/3 -right-1/4 h-3/4 w-3/4 rounded-full blur-3xl ${background.second}`}
       animate={{ x: [0, -160, -20], y: [0, -100, -180], scale: [1, 0.9, 1.15] }}
       transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
     />
-    <div className={`absolute inset-0 bg-gradient-to-br ${mode === "night" ? "from-slate-950/50 via-transparent to-indigo-950/70" : "from-white/50 via-transparent to-teal-100/60"}`} />
+    <div className={`absolute inset-0 bg-gradient-to-br ${background.overlay}`} />
     <motion.div
       key={quote}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`absolute inset-x-0 top-[18%] mx-auto max-w-xl px-8 text-center text-xl font-medium italic leading-relaxed ${mode === "night" ? "text-white/80" : "text-slate-700/80"}`}
+      className="absolute inset-x-0 top-5 mx-auto max-w-xl px-6 text-center text-base font-medium italic leading-relaxed text-white/90 drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)] sm:top-8 sm:px-8 sm:text-xl"
     >
       “{quote}”
       <p className="mt-3 text-xs not-italic uppercase tracking-[0.28em] opacity-70">Pomodoro mode · distraction-free</p>
     </motion.div>
-  </div>
-);
+  </div>;
+};
 
 function TimerWindow() {
   const webcamRef = useRef(null);
+  // Rnd positions are evaluated during server rendering as well as in the browser.
+  const viewport = typeof window === "undefined" ? { width: 1024, height: 768 } : { width: window.innerWidth, height: window.innerHeight };
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -148,6 +158,8 @@ function TimerWindow() {
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isMonitoringEnabled, setIsMonitoringEnabled] = useState(initialMonitoringEnabled);
   const [isMotivationPlaylistEnabled, setIsMotivationPlaylistEnabled] = useState(initialMotivationPlaylistEnabled);
+  const [pomodoroBackground, setPomodoroBackground] = useState("aurora");
+  const [pomodoroLayout, setPomodoroLayout] = useState("immersive");
 
   const staticMessages = [
     "Keep phone away for focus",
@@ -204,6 +216,23 @@ function TimerWindow() {
       localStorage.setItem("themeMode", mode);
     }
   }, [mode]);
+
+  useEffect(() => {
+    const savedBackground = localStorage.getItem("pomodoroBackground");
+    if (savedBackground && POMODORO_BACKGROUNDS[savedBackground]) setPomodoroBackground(savedBackground);
+    const savedLayout = localStorage.getItem("pomodoroLayout");
+    if (savedLayout === "classic" || savedLayout === "immersive") setPomodoroLayout(savedLayout);
+  }, []);
+
+  const handlePomodoroBackgroundChange = (nextBackground) => {
+    setPomodoroBackground(nextBackground);
+    localStorage.setItem("pomodoroBackground", nextBackground);
+  };
+
+  const handlePomodoroLayoutChange = (nextLayout) => {
+    setPomodoroLayout(nextLayout);
+    localStorage.setItem("pomodoroLayout", nextLayout);
+  };
 
   useEffect(() => {
     if (isBreakTime || isPaused) return;
@@ -637,6 +666,7 @@ function TimerWindow() {
   }, [isPaused, isBreakTime, currentStudySegment, totalStudyPeriods, selectedSound, isMonitoringEnabled, playBackgroundSound, playEndSound, stop]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  const focusBlocksLeft = totalStudyPeriods - currentStudySegment + (isBreakTime ? 0 : 1);
 
   const glowVariants = {
     animate: {
@@ -655,7 +685,7 @@ function TimerWindow() {
     >
       <TimerBackground mode={mode} />
 
-      {!isMonitoringEnabled && <PomodoroBackground mode={mode} quote={motivationalQuotes[currentQuoteIndex]} />}
+      {!isMonitoringEnabled && <PomodoroBackground quote={motivationalQuotes[currentQuoteIndex]} variant={pomodoroBackground} />}
 
       {/* Theme Toggle */}
       <motion.div
@@ -779,18 +809,17 @@ function TimerWindow() {
         </div>
       </motion.div>}
 
-      {/* The timer becomes an in-window Pomodoro panel when monitoring is off. */}
-      <Rnd
+      {/* Monitoring mode keeps its movable controls. Pomodoro-only mode uses the full screen below. */}
+      {isMonitoringEnabled && <Rnd
         default={{
-          x: isMonitoringEnabled ? 40 : Math.max(20, window.innerWidth / 2 - 170),
-          y: isMonitoringEnabled ? window.innerHeight / 2 - 210 : Math.max(90, window.innerHeight / 2 - 230),
-          width: isMonitoringEnabled ? 280 : 340,
+          x: 40,
+          y: viewport.height / 2 - 210,
+          width: 280,
           height: "auto",
         }}
         minWidth={220}
         bounds="window"
-        disableDragging={!isMonitoringEnabled}
-        enableResizing={isMonitoringEnabled ? { bottomRight: true, right: true, bottom: true } : false}
+        enableResizing={{ bottomRight: true, right: true, bottom: true }}
         style={{ zIndex: 50 }}
       >
         <motion.div
@@ -801,19 +830,16 @@ function TimerWindow() {
         >
           <div className={`p-4 ${mode === "night" ? "bg-gradient-to-r from-indigo-900/50 to-purple-900/50" : "bg-gradient-to-r from-blue-100/50 to-teal-100/50"} border-b border-white/20`}>
             <div className="flex justify-between items-center">
-              <h3 className={`text-sm font-semibold flex items-center gap-2 ${mode === "night" ? "text-teal-200" : "text-teal-600"}`}>
-                {isMonitoringEnabled ? <><FaBell /> Nudge Alert Card</> : <>⏱ Pomodoro Controls</>}
-              </h3>
-              {isMonitoringEnabled && <motion.div
+              <h3 className={`text-sm font-semibold flex items-center gap-2 ${mode === "night" ? "text-teal-200" : "text-teal-600"}`}><FaBell /> Nudge Alert Card</h3>
+              <motion.div
                 className={`w-12 h-6 rounded-full ${localNudgeEnabled ? (mode === "night" ? "bg-teal-500" : "bg-teal-600") : mode === "night" ? "bg-gray-600" : "bg-gray-300"} flex items-center p-1 cursor-pointer`}
                 onClick={handleNudgeToggle}
                 whileHover={{ scale: 1.05 }}
               >
                 <motion.div className="w-4 h-4 bg-white rounded-full" animate={{ x: localNudgeEnabled ? 24 : 0 }} transition={{ type: "spring", stiffness: 300 }} />
-              </motion.div>}
+              </motion.div>
             </div>
-            {!isMonitoringEnabled && <p className={`mt-2 text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>A calm Pomodoro cycle with no camera tracking or nudges.</p>}
-            {isMonitoringEnabled && localNudgeEnabled && (
+            {localNudgeEnabled && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2">
                 <label className={`text-xs ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>Nudge Type:</label>
                 <select
@@ -897,10 +923,93 @@ function TimerWindow() {
             </div>
           </div>
         </motion.div>
-      </Rnd>
+      </Rnd>}
 
-      {isMotivationPlaylistEnabled && <Rnd
-        default={{ x: window.innerWidth * 0.37, y: 36, width: 380, height: 270 }}
+      {!isMonitoringEnabled && pomodoroLayout === "immersive" && <main className="fixed inset-0 z-20 flex flex-col items-center justify-start overflow-y-auto px-5 pb-6 pt-36 text-center sm:px-8 sm:pt-40">
+        <motion.time
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 130 }}
+          className="font-sans text-6xl font-bold tracking-[-0.06em] text-white/80 drop-shadow-[0_4px_20px_rgba(0,0,0,0.3)] sm:text-8xl md:text-[10rem]"
+        >
+          {formatTime(timeRemaining)}
+        </motion.time>
+        <p className={`mt-4 text-base font-medium sm:mt-5 sm:text-lg ${mode === "night" ? "text-white/90" : "text-slate-800"}`}>
+          {isBreakTime ? "Take a proper break" : "Stay with the work"}
+        </p>
+        <p className={`mt-1 text-sm ${mode === "night" ? "text-slate-300" : "text-slate-600"}`}>
+          {isBreakTime ? `Break · ${formatTime(timeRemaining)}` : `Focus session ${currentStudySegment} of ${totalStudyPeriods}`}
+        </p>
+        <section className={`mt-5 flex w-full max-w-2xl flex-wrap items-stretch justify-center divide-y divide-white/15 text-left sm:divide-x sm:divide-y-0 ${mode === "night" ? "text-slate-200" : "text-slate-700"}`} aria-label="Session details">
+          <div className="min-w-[180px] px-4 py-2.5 sm:max-w-xs">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-60">Current goal</p>
+            <p className="mt-1 truncate text-sm font-medium">{projectName || "Your focus goal"}</p>
+          </div>
+          <div className="min-w-[112px] px-4 py-2.5 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-60">Session</p>
+            <p className="mt-1 text-sm font-medium">#{sessionNo}</p>
+          </div>
+          <div className="min-w-[150px] px-4 py-2.5 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-60">Focus blocks</p>
+            <p className="mt-1 text-sm font-medium">{focusBlocksLeft} left · {currentStudySegment}/{totalStudyPeriods}</p>
+          </div>
+        </section>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:mt-7">
+          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={handlePauseSession} className={`rounded-full px-5 py-2.5 text-sm font-medium text-white shadow-lg ${mode === "night" ? "bg-indigo-500/90" : "bg-indigo-600"}`}>
+            <FaPause className="mr-2 inline" /> {isPaused ? "Resume" : "Pause"}
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={() => setShowStopConfirmation(true)} className={`rounded-full px-5 py-2.5 text-sm font-medium ${mode === "night" ? "bg-white/10 text-white" : "bg-white/70 text-slate-700"}`}>
+            <FaStop className="mr-2 inline" /> Stop
+          </motion.button>
+        </div>
+        <div className={`mt-6 flex max-w-lg flex-wrap items-center justify-center gap-2 text-xs sm:mt-8 sm:gap-3 ${mode === "night" ? "text-slate-200" : "text-slate-700"}`}>
+          <select aria-label="Music source" value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`rounded-full border border-white/20 px-3 py-2 outline-none ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
+            <option value="ambient">Ambient sounds</option>
+            <option value="motivation-playlist">Motivation playlist</option>
+          </select>
+          {!isMotivationPlaylistEnabled && <select aria-label="Ambient track" value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`rounded-full border border-white/20 px-3 py-2 outline-none ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
+            <option value="">No sound</option>
+            {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
+          </select>}
+          <select aria-label="Pomodoro background" value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className={`rounded-full border border-white/20 px-3 py-2 outline-none ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
+            {Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}
+          </select>
+          <select aria-label="Pomodoro layout" value={pomodoroLayout} onChange={(e) => handlePomodoroLayoutChange(e.target.value)} className={`rounded-full border border-white/20 px-3 py-2 outline-none ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
+            <option value="immersive">Immersive layout</option>
+            <option value="classic">Classic layout</option>
+          </select>
+          <button type="button" role="switch" aria-checked={isMonitoringEnabled} onClick={handleMonitoringToggle} className={`rounded-full border border-white/20 px-3 py-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>Enable monitoring</button>
+        </div>
+      </main>}
+
+      {!isMonitoringEnabled && pomodoroLayout === "classic" && <main className="fixed inset-0 z-20 flex items-center justify-center overflow-y-auto px-5 py-24">
+        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className={`w-full max-w-sm rounded-3xl border p-6 text-center shadow-2xl backdrop-blur-xl ${mode === "night" ? "border-white/15 bg-slate-950/55 text-white" : "border-white/50 bg-white/55 text-slate-800"}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.24em] ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>Classic Pomodoro</p>
+          <p className="mt-2 truncate text-sm font-medium">{projectName || "Your focus goal"} · Session #{sessionNo}</p>
+          <div className="mx-auto mt-6 w-56 sm:w-64">
+            <CircularProgressbar
+              value={(timeRemaining / ((isBreakTime ? breakDuration : studyDuration) * 60)) * 100}
+              text={formatTime(timeRemaining)}
+              styles={buildStyles({ pathColor: isBreakTime ? "#fb7185" : "#2dd4bf", trailColor: mode === "night" ? "#334155" : "#dbeafe", textColor: mode === "night" ? "#ffffff" : "#0f172a", textSize: "17px" })}
+            />
+          </div>
+          <p className={`mt-4 text-sm ${mode === "night" ? "text-slate-300" : "text-slate-600"}`}>{isBreakTime ? "Break time — recharge well" : `${focusBlocksLeft} focus blocks left · ${currentStudySegment}/${totalStudyPeriods}`}</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button onClick={handlePauseSession} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white"><FaPause className="mr-1 inline" /> {isPaused ? "Resume" : "Pause"}</button>
+            <button onClick={() => setShowStopConfirmation(true)} className={`rounded-xl px-4 py-2 text-sm font-medium ${mode === "night" ? "bg-white/10" : "bg-slate-200"}`}><FaStop className="mr-1 inline" /> Stop</button>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-2 text-xs">
+            <select aria-label="Music source" value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="ambient">Ambient sounds</option><option value="motivation-playlist">Motivation playlist</option></select>
+            <select aria-label="Pomodoro layout" value={pomodoroLayout} onChange={(e) => handlePomodoroLayoutChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="immersive">Immersive layout</option><option value="classic">Classic layout</option></select>
+            {!isMotivationPlaylistEnabled && <select aria-label="Ambient track" value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="">No sound</option>{sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}</select>}
+            <select aria-label="Pomodoro background" value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>{Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}</select>
+          </div>
+          <button type="button" onClick={handleMonitoringToggle} className={`mt-4 text-xs underline underline-offset-4 ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>Enable focus monitoring</button>
+        </motion.section>
+      </main>}
+
+      {isMonitoringEnabled && isMotivationPlaylistEnabled && <Rnd
+        default={{ x: viewport.width * 0.37, y: 36, width: 380, height: 270 }}
         minWidth={280}
         minHeight={220}
         bounds="window"
@@ -924,9 +1033,18 @@ function TimerWindow() {
         </div>
       </Rnd>}
 
+      {!isMonitoringEnabled && isMotivationPlaylistEnabled && <div className="fixed inset-x-0 bottom-5 z-30 mx-auto h-32 w-72 overflow-hidden rounded-lg shadow-xl sm:w-80">
+        <YouTube
+          videoId={MOTIVATION_PLAYLIST_VIDEO_ID}
+          opts={{ width: "100%", height: "100%", playerVars: { autoplay: 1, listType: "playlist", list: MOTIVATION_PLAYLIST_ID, rel: 0 } }}
+          containerClassName="h-full w-full"
+          className="h-full w-full"
+        />
+      </div>}
+
       {/* DeepLens Engine Card */}
       {isMonitoringEnabled && <Rnd
-        default={{ x: window.innerWidth * 0.78, y: window.innerHeight * 0.58, width: 300, height: "auto" }}
+        default={{ x: viewport.width * 0.78, y: viewport.height * 0.58, width: 300, height: "auto" }}
         minWidth={220}
         bounds="window"
         enableResizing={{ bottomRight: true, right: true, bottom: true }}
@@ -1034,8 +1152,8 @@ function TimerWindow() {
       </Rnd>}
 
       {/* Motivational Focus Quote Widget */}
-      <Rnd
-        default={{ x: window.innerWidth * 0.4, y: window.innerHeight * 0.8, width: 250, height: "auto" }}
+      {isMonitoringEnabled && <Rnd
+        default={{ x: viewport.width * 0.4, y: viewport.height * 0.8, width: 250, height: "auto" }}
         minWidth={200}
         bounds="window"
         enableResizing={{ bottomRight: true, right: true, bottom: true }}
@@ -1061,7 +1179,7 @@ function TimerWindow() {
             {motivationalQuotes[currentQuoteIndex]}
           </motion.p>
         </motion.div>
-      </Rnd>
+      </Rnd>}
 
       {/* Break Overlay */}
       <AnimatePresence>
