@@ -474,7 +474,7 @@ function ExecutePage() {
         initial="initial"
         animate="animate"
         whileHover="hover"
-        className="relative bg-white bg-opacity-95 backdrop-blur-lg rounded-xl shadow-lg p-4 md:p-6 w-full max-w-sm sm:max-w-md lg:max-w-lg z-10"
+        className="relative bg-white bg-opacity-95 backdrop-blur-lg rounded-xl shadow-lg p-4 md:p-6 w-full max-w-sm sm:max-w-2xl z-10"
       >
         <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center mb-4">
           <h3 className="text-lg md:text-xl font-semibold text-indigo-600">Welcome, {userName}!</h3>
@@ -576,7 +576,8 @@ function ExecutePage() {
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }} className="mb-4">
+            <div className="grid gap-3 md:grid-cols-2">
+            <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.7 }} className="mb-0">
               <label className="block font-medium mb-1 text-gray-700 text-xs">Select Session Duration (Hours):</label>
               <input
                 type="number"
@@ -588,7 +589,7 @@ function ExecutePage() {
               />
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }} className="mb-4">
+            <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.8 }} className="mb-0">
               <label className="block font-medium mb-1 text-gray-700 text-xs">Select Background Sound:</label>
               <select
                 className="w-full border-2 border-gray-200 rounded-lg p-1.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300 text-xs"
@@ -604,7 +605,7 @@ function ExecutePage() {
               </select>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }} className="mb-4">
+            <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 }} className="mb-0">
               <label className="block font-medium mb-1 text-gray-700 text-xs">Do you want to be nudged to stay focused?</label>
               <div className="flex items-center space-x-4">
                 <label className="flex items-center text-xs">
@@ -650,7 +651,7 @@ function ExecutePage() {
               )}
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.95 }} className="mb-4 rounded-lg border border-indigo-100 bg-indigo-50/70 p-3">
+            <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.95 }} className="mb-0 rounded-lg border border-indigo-100 bg-indigo-50/70 p-3">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-indigo-800">LockedIn Focus</p>
@@ -660,7 +661,7 @@ function ExecutePage() {
                   <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${focusWorkspaceEnabled ? "translate-x-6" : "translate-x-0"}`} />
                 </button>
               </div>
-              {focusWorkspaceEnabled && <div className="mt-3 space-y-3">
+              {focusWorkspaceEnabled && <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_180px] sm:items-end">
                 <div>
                   <label className="block text-xs font-medium text-gray-700">Webpage, video, or playlist link</label>
                   <input type="url" value={focusWorkspaceUrl} onChange={(e) => setFocusWorkspaceUrl(e.target.value)} placeholder="https://example.com or a YouTube link" className="mt-1 w-full rounded-lg border border-indigo-200 bg-white p-2 text-xs text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -671,6 +672,7 @@ function ExecutePage() {
                 </label>
               </div>}
             </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 15 }}
