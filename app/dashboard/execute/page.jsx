@@ -750,14 +750,14 @@ function ExecutePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gray-900/60 backdrop-blur-lg flex items-center justify-center z-50 overflow-hidden"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-gray-900/60 p-3 backdrop-blur-lg sm:items-center sm:p-5"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="bg-gradient-to-br from-indigo-900 to-purple-800 rounded-xl shadow-2xl p-6 md:p-8 w-11/12 max-w-2xl relative overflow-hidden backdrop-blur-sm"
+              className="relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-xl bg-gradient-to-br from-indigo-900 to-purple-800 p-4 pb-12 shadow-2xl backdrop-blur-sm sm:p-6 sm:pb-12 md:p-8"
             >
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -856,7 +856,7 @@ function ExecutePage() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
-                    className="mb-6 px-4 relative overflow-hidden"
+                    className="relative mb-6 overflow-hidden px-0 sm:px-4"
                   >
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-b from-indigo-900/20 to-transparent opacity-50"
@@ -876,18 +876,18 @@ function ExecutePage() {
                       </svg>
                     </motion.div>
 
-                    <div className="flex justify-center space-x-4 mb-4 flex-wrap relative z-10">
+                    <div className="relative z-10 mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
                       {["1", "2", "3", "4"].map((num) => (
                         <motion.div
                           key={num}
-                          className="relative flex-1 min-w-[22%]"
+                          className="relative min-w-0"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.3 }}
                         >
                           <img
                             src={`/dos/dos${num}.png`}
                             alt={`Do Posture ${num}`}
-                            className="rounded-lg shadow-md border-2 border-teal-300 w-full h-auto max-w-[220px] transition-all duration-300 object-cover"
+                            className="h-auto w-full rounded-lg border-2 border-teal-300 object-cover shadow-md transition-all duration-300"
                           />
                           <motion.div
                             className="absolute inset-0 bg-gradient-to-t from-teal-900/50 to-transparent rounded-lg flex items-center justify-center opacity-0 hover:opacity-80 transition-opacity duration-300"
@@ -896,24 +896,24 @@ function ExecutePage() {
                           >
                             <span className="text-white text-xs font-semibold">Do {num}</span>
                           </motion.div>
-                          <div className="absolute bottom-2 right-2 bg-teal-400 text-white rounded-full w-10 h-10 flex items-center justify-center text-xs font-bold shadow-md">
+                          <div className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-teal-400 text-[9px] font-bold text-white shadow-md sm:bottom-2 sm:right-2 sm:h-10 sm:w-10 sm:text-xs">
                             Right
                           </div>
                         </motion.div>
                       ))}
                     </div>
-                    <div className="flex justify-center space-x-4 flex-wrap relative z-10">
+                    <div className="relative z-10 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
                       {["1", "2", "3", "4"].map((num) => (
                         <motion.div
                           key={num}
-                          className="relative flex-1 min-w-[22%]"
+                          className="relative min-w-0"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.3 }}
                         >
                           <img
                             src={`/donts/donts${num}.png`}
                             alt={`Don't Posture ${num}`}
-                            className="rounded-lg shadow-md border-2 border-red-300 w-full h-auto max-w-[220px] transition-all duration-300 object-cover"
+                            className="h-auto w-full rounded-lg border-2 border-red-300 object-cover shadow-md transition-all duration-300"
                           />
                           <motion.div
                             className="absolute inset-0 bg-gradient-to-t from-red-900/50 to-transparent rounded-lg flex items-center justify-center opacity-0 hover:opacity-80 transition-opacity duration-300"
@@ -922,7 +922,7 @@ function ExecutePage() {
                           >
                             <span className="text-white text-xs font-semibold">Don't {num}</span>
                           </motion.div>
-                          <div className="absolute bottom-2 right-2 bg-red-400 text-white rounded-full w-10 h-10 flex items-center justify-center text-xs font-bold shadow-md">
+                          <div className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-red-400 text-[9px] font-bold text-white shadow-md sm:bottom-2 sm:right-2 sm:h-10 sm:w-10 sm:text-xs">
                             Wrong
                           </div>
                         </motion.div>
@@ -968,7 +968,7 @@ function ExecutePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center backdrop-blur-md justify-center z-50"
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gray-800 bg-opacity-75 p-3 backdrop-blur-md"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
