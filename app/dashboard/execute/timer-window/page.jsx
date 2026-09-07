@@ -833,7 +833,7 @@ function TimerWindow() {
 
       {/* Fake Positive Nudge Trigger Dot */}
       {isMonitoringEnabled && <motion.div
-        className={`fixed bottom-4 left-60 w-3 h-3 rounded-full ${mode === "night" ? "bg-teal-400" : "bg-teal-500"} z-[60] cursor-pointer`}
+        className={`fixed bottom-4 left-60 hidden h-3 w-3 cursor-pointer rounded-full md:block ${mode === "night" ? "bg-teal-400" : "bg-teal-500"} z-[60]`}
         whileHover={{ scale: 1.5, backgroundColor: mode === "night" ? "#34d399" : "#10b981" }}
         onClick={triggerPositiveNudge}
         title="Trigger Positive Nudge (Demo)"
@@ -867,7 +867,7 @@ function TimerWindow() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className={`fixed top-4 right-4 z-[60] ${mode === "night" ? "bg-white/10" : "bg-white/70"} backdrop-blur-lg p-4 rounded-xl shadow-xl border border-white/10 flex flex-col gap-3 max-w-xs`}
+        className={`fixed top-4 right-4 z-[60] hidden max-w-xs flex-col gap-3 rounded-xl border border-white/10 p-4 shadow-xl backdrop-blur-lg md:flex ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}
       >
         <div
           className="relative group flex items-center gap-2"
@@ -930,8 +930,30 @@ function TimerWindow() {
         </div>
       </motion.div>}
 
+      {/* Mobile focus controls replace the desktop's draggable cards. */}
+      {isMonitoringEnabled && <div className={`fixed inset-x-3 bottom-3 z-[65] rounded-2xl border border-white/15 p-3 shadow-2xl backdrop-blur-xl md:hidden ${mode === "night" ? "bg-slate-950/85 text-white" : "bg-white/90 text-slate-900"}`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-teal-400">Focus session</p>
+            <p className="mt-1 text-3xl font-bold tracking-tight">{formatTime(timeRemaining)}</p>
+            <p className={`mt-1 truncate text-xs ${mode === "night" ? "text-slate-300" : "text-slate-600"}`}>
+              {isBreakTime ? "Break time" : `Focus ${currentStudySegment}/${totalStudyPeriods}`} · {focusStatus}
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button onClick={handlePauseSession} className="rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:scale-95">
+              <FaPause className="mr-1 inline" />{isPaused ? "Resume" : "Pause"}
+            </button>
+            <button onClick={() => setShowStopConfirmation(true)} className="rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white shadow-sm active:scale-95">
+              <FaStop className="mr-1 inline" />Stop
+            </button>
+          </div>
+        </div>
+      </div>}
+
       {/* Monitoring mode keeps its movable controls. Pomodoro-only mode uses the full screen below. */}
       {isMonitoringEnabled && <Rnd
+        className="hidden md:block"
         default={{
           x: 40,
           y: viewport.height / 2 - 210,
@@ -1132,6 +1154,7 @@ function TimerWindow() {
       </main>}
 
       {isMonitoringEnabled && isMotivationPlaylistEnabled && <Rnd
+        className="hidden md:block"
         default={{ x: viewport.width * 0.37, y: 36, width: 380, height: 270 }}
         minWidth={280}
         minHeight={220}
@@ -1167,6 +1190,7 @@ function TimerWindow() {
 
       {/* DeepLens Engine Card */}
       {isMonitoringEnabled && <Rnd
+        className="hidden md:block"
         default={{ x: viewport.width * 0.78, y: viewport.height * 0.58, width: 300, height: "auto" }}
         minWidth={220}
         bounds="window"
@@ -1276,6 +1300,7 @@ function TimerWindow() {
 
       {/* Motivational Focus Quote Widget */}
       {isMonitoringEnabled && <Rnd
+        className="hidden md:block"
         default={{ x: viewport.width * 0.4, y: viewport.height * 0.8, width: 250, height: "auto" }}
         minWidth={200}
         bounds="window"
@@ -1338,7 +1363,7 @@ function TimerWindow() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className={`${mode === "night" ? "bg-white/10" : "bg-white/70"} backdrop-blur-lg p-6 rounded-xl shadow-xl border border-white/10 max-w-md ${
+            className={`${mode === "night" ? "bg-white/10" : "bg-white/70"} mx-3 w-[calc(100%-1.5rem)] max-w-md rounded-xl border border-white/10 p-4 shadow-xl backdrop-blur-lg sm:p-6 ${
                 mode === "night" ? "text-white" : "text-gray-800"
               }`}
             >
@@ -1378,7 +1403,7 @@ function TimerWindow() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className={`${mode === "night" ? "bg-white/10" : "bg-white/70"} backdrop-blur-lg p-6 rounded-xl shadow-xl border border-white/10 max-w-md ${
+            className={`${mode === "night" ? "bg-white/10" : "bg-white/70"} mx-3 w-[calc(100%-1.5rem)] max-w-md rounded-xl border border-white/10 p-4 shadow-xl backdrop-blur-lg sm:p-6 ${
                 mode === "night" ? "text-white" : "text-gray-800"
               }`}
             >
