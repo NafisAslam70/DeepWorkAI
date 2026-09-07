@@ -143,6 +143,11 @@ function TimerWindow() {
   const sessionNo = searchParams.get("sessionNo") || "-";
   const initialNudgeEnabled = searchParams.get("nudgeEnabled") === "true";
   const initialNudgeType = searchParams.get("nudgeType") || "text";
+  const hydrationEnabled = searchParams.get("hydration") === "true";
+  const hydrationIntervalMinutes = [30, 45, 60].includes(Number(searchParams.get("hydrationInterval")))
+    ? Number(searchParams.get("hydrationInterval"))
+    : 45;
+  const hydrationStyle = searchParams.get("hydrationStyle") || "sound";
 
   const [showPauseInfo, setShowPauseInfo] = useState(false);
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
@@ -153,6 +158,7 @@ function TimerWindow() {
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [playEndSound] = useSound("/sounds/end-sound.mp3");
+  const [playHydrationSound] = useSound("/sounds/nudge-chime.mp3", { volume: 0.55 });
   const [selectedSound, setSelectedSound] = useState(soundUrl);
   // `use-sound` needs a valid source on first render; an empty source never
   // creates its Howl instance, so later selecting an ambient track cannot play.
@@ -170,6 +176,8 @@ function TimerWindow() {
   const [distractedSeconds, setDistractedSeconds] = useState(0);
   const sessionStartedAtRef = useRef(Date.now());
   const studyElapsedSecondsRef = useRef(0);
+  const hydrationElapsedSecondsRef = useRef(0);
+  const [showHydrationReminder, setShowHydrationReminder] = useState(false);
   const [summaryMsg, setSummaryMsg] = useState("-");
   const [finalStatus, setFinalStatus] = useState("Waiting...");
   const [finalReason, setFinalReason] = useState("-");
@@ -191,6 +199,16 @@ function TimerWindow() {
   const [pomodoroLayout, setPomodoroLayout] = useState("immersive");
   const [hasLeftFocusWorkspace, setHasLeftFocusWorkspace] = useState(false);
   const [workspacePaneWidth, setWorkspacePaneWidth] = useState(focusWorkspaceWidth);
+
+  const triggerHydrationReminder = () => {
+    setShowHydrationReminder(true);
+    if (hydrationStyle !== "silent") playHydrationSound();
+    if (hydrationStyle === "voice" && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance("Please drink water."));
+    }
+    window.setTimeout(() => setShowHydrationReminder(false), 12000);
+  };
 
   const staticMessages = [
     "Keep phone away for focus",
@@ -696,7 +714,16 @@ function TimerWindow() {
       const now = Date.now();
       if (now - lastTime >= 1000) {
         lastTime = now;
-        if (!isBreakTime) studyElapsedSecondsRef.current += 1;
+        if (!isBreakTime) {
+          studyElapsedSecondsRef.current += 1;
+          if (hydrationEnabled) {
+            hydrationElapsedSecondsRef.current += 1;
+            if (hydrationElapsedSecondsRef.current >= hydrationIntervalMinutes * 60) {
+              hydrationElapsedSecondsRef.current = 0;
+              triggerHydrationReminder();
+            }
+          }
+        }
         sendWebcamFrame();
         setTimeRemaining((prev) => {
           if (prev <= 1) {
@@ -752,6 +779,27 @@ function TimerWindow() {
       <TimerBackground mode={mode} />
 
       {!isMonitoringEnabled && <PomodoroBackground quote={motivationalQuotes[currentQuoteIndex]} variant={pomodoroBackground} />}
+
+      <AnimatePresence>
+        {showHydrationReminder && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.96 }}
+            className="fixed left-1/2 top-4 z-[100] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-2xl border border-cyan-200 bg-white p-4 text-slate-900 shadow-2xl"
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-3xl">💧</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">Water check</p>
+                <p className="mt-1 text-sm text-slate-600">Take a few sips and keep your water nearby.</p>
+              </div>
+              <button type="button" onClick={() => setShowHydrationReminder(false)} className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white">Done</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {focusWorkspaceEnabled && <div style={{ "--workspace-timer-width": `${workspacePaneWidth}%` }} className="fixed inset-0 z-[70] flex min-w-0 flex-col bg-slate-950 text-white sm:flex-row">
         <aside className={`relative z-10 flex w-full flex-col justify-between border-b border-white/10 p-4 sm:min-w-[220px] sm:w-[var(--workspace-timer-width)] sm:border-b-0 sm:p-6 ${workspaceBackground.base}`}>

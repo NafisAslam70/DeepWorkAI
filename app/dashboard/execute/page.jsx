@@ -43,6 +43,9 @@ function ExecutePage() {
     breakDuration: 0,
     nudgeEnabled: false,
     nudgeType: "text",
+    hydrationEnabled: false,
+    hydrationInterval: 45,
+    hydrationStyle: "sound",
   });
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
@@ -51,6 +54,9 @@ function ExecutePage() {
   const [selectedSound, setSelectedSound] = useState("");
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
   const [nudgeType, setNudgeType] = useState("text_with_sound");
+  const [hydrationEnabled, setHydrationEnabled] = useState(false);
+  const [hydrationInterval, setHydrationInterval] = useState(45);
+  const [hydrationStyle, setHydrationStyle] = useState("sound");
   const [focusWorkspaceEnabled, setFocusWorkspaceEnabled] = useState(false);
   const [focusWorkspaceUrl, setFocusWorkspaceUrl] = useState("");
   const [focusWorkspaceTimerWidth, setFocusWorkspaceTimerWidth] = useState(10);
@@ -229,6 +235,9 @@ function ExecutePage() {
         breakDuration,
         nudgeEnabled,
         nudgeType,
+        hydrationEnabled,
+        hydrationInterval,
+        hydrationStyle,
       });
 
       setIsSessionModalOpen(true); // Open session confirmation modal
@@ -255,7 +264,7 @@ function ExecutePage() {
     }
 
     setIsSessionModalOpen(false);
-    const { totalSegments, studyDuration, breakDuration, nudgeEnabled, nudgeType } = sessionConfig;
+    const { totalSegments, studyDuration, breakDuration, nudgeEnabled, nudgeType, hydrationEnabled, hydrationInterval, hydrationStyle } = sessionConfig;
     const projectId = localStorage.getItem("selectedGoalId");
     const goalName = goalDetails ? goalDetails.projectName : "Unknown";
 
@@ -264,6 +273,7 @@ function ExecutePage() {
       goalName, projectId: projectId || "", sessionNo: nextSessionNo.toString(), nudgeEnabled: nudgeEnabled.toString(), nudgeType,
       workspace: focusWorkspaceEnabled.toString(), workspaceUrl: focusWorkspaceUrl, workspaceWidth: focusWorkspaceTimerWidth.toString(),
       monitoring: focusWorkspaceEnabled ? "false" : "true",
+      hydration: hydrationEnabled.toString(), hydrationInterval: hydrationInterval.toString(), hydrationStyle,
     });
 
     const timerUrl = `/dashboard/execute/timer-window?${timerParams.toString()}`;
@@ -678,6 +688,29 @@ function ExecutePage() {
                 </label>
               </div>}
             </motion.div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }} className="mb-0 rounded-lg border border-cyan-100 bg-cyan-50/70 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-cyan-800">💧 Water reminder</p>
+                  <p className="mt-0.5 text-[11px] text-cyan-700">A gentle hydration check during focus time.</p>
+                </div>
+                <button type="button" role="switch" aria-checked={hydrationEnabled} onClick={() => setHydrationEnabled((enabled) => !enabled)} className={`h-6 w-12 rounded-full p-1 transition-colors ${hydrationEnabled ? "bg-cyan-600" : "bg-gray-400"}`}>
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${hydrationEnabled ? "translate-x-6" : "translate-x-0"}`} />
+                </button>
+              </div>
+              {hydrationEnabled && <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <label className="text-xs font-medium text-gray-700">Remind every
+                  <select value={hydrationInterval} onChange={(e) => setHydrationInterval(Number(e.target.value))} className="mt-1 w-full rounded-lg border border-cyan-200 bg-white p-2 text-xs text-gray-700">
+                    <option value={30}>30 minutes</option><option value={45}>45 minutes</option><option value={60}>60 minutes</option>
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-gray-700">Reminder style
+                  <select value={hydrationStyle} onChange={(e) => setHydrationStyle(e.target.value)} className="mt-1 w-full rounded-lg border border-cyan-200 bg-white p-2 text-xs text-gray-700">
+                    <option value="sound">Water chime + popup</option><option value="voice">Voice + chime + popup</option><option value="silent">Popup only</option>
+                  </select>
+                </label>
+              </div>}
+            </motion.div>
             </div>
 
             <motion.div
@@ -1004,6 +1037,7 @@ function ExecutePage() {
                     ? `Enabled (${sessionConfig.nudgeType === "text" ? "Text Only" : "Text with Sound"})`
                     : "Disabled"}
                 </p>
+                {sessionConfig.hydrationEnabled && <p><span className="font-medium">Water reminder:</span> Every {sessionConfig.hydrationInterval} min ({sessionConfig.hydrationStyle === "voice" ? "voice + chime" : sessionConfig.hydrationStyle === "sound" ? "chime" : "popup"})</p>}
               </div>
               <div className="flex justify-between mt-4 gap-3">
                 <motion.button
