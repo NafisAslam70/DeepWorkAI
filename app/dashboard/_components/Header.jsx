@@ -4,12 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { HiMenu, HiX } from "react-icons/hi";
+import { HiMenu } from "react-icons/hi";
 
-function Header() {
+function Header({ onOpenSidebar }) {
   const path = usePathname();
   const [isPopup, setIsPopup] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsPopup(!!window.opener);
@@ -22,11 +21,6 @@ function Header() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const mobileMenuVariants = {
-    hidden: { opacity: 0, height: 0, y: -20 },
-    visible: { opacity: 1, height: "auto", y: 0, transition: { duration: 0.3, ease: "easeOut" } },
-  };
-
   return (
     <motion.div
       initial={{ y: -50, opacity: 0 }}
@@ -37,14 +31,10 @@ function Header() {
       {/* Mobile Menu Button */}
       <motion.div className="md:hidden" whileTap={{ scale: 0.95 }}>
         <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={onOpenSidebar}
           className="focus:outline-none"
         >
-          {isMobileMenuOpen ? (
-            <HiX className="h-8 w-8 text-gray-900 hover:text-indigo-700 transition-colors" />
-          ) : (
-            <HiMenu className="h-8 w-8 text-gray-900 hover:text-indigo-700 transition-colors" />
-          )}
+          <HiMenu className="h-8 w-8 text-gray-900 hover:text-indigo-700 transition-colors" />
         </button>
       </motion.div>
 
@@ -118,35 +108,6 @@ function Header() {
         </motion.div>
       </motion.div>
 
-      {/* Mobile Menu */}
-      <motion.div
-        variants={mobileMenuVariants}
-        initial="hidden"
-        animate={isMobileMenuOpen ? "visible" : "hidden"}
-        className="absolute top-20 left-0 w-full bg-white bg-opacity-90 backdrop-blur-md p-6 md:hidden shadow-lg z-30 rounded-b-xl"
-      >
-        <ul className="flex flex-col gap-4">
-          {[
-            { href: "/dashboard", label: "Dashboard" },
-            { href: "/dashboard/TheStory", label: "Why DeepWorkAI?" },
-            { href: "/dashboard/WhoThisAppIsFor", label: "For Whom?" },
-            { href: "/dashboard/HowItWorks", label: "How it works?" },
-            { href: "/dashboard/execute", label: "Take a Session" },
-          ].map((item) => (
-            <Link href={item.href} key={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-              <motion.li
-                className={`text-base font-semibold cursor-pointer ${
-                  path === item.href ? "text-indigo-700" : "text-gray-900"
-                } py-2 hover:text-indigo-600 transition-colors`}
-                whileHover={{ scale: 1.05, y: -2 }}
-                transition={{ duration: 0.2 }}
-              >
-                {item.label}
-              </motion.li>
-            </Link>
-          ))}
-        </ul>
-      </motion.div>
     </motion.div>
   );
 }

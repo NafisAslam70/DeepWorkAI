@@ -73,7 +73,7 @@ function Sidebar() {
       variants={sidebarVariants}
       initial="initial"
       animate="animate"
-      className="w-64 h-screen bg-gradient-to-b from-gray-900 via-[#231524] to-gray-800 text-white flex flex-col justify-between p-6 shadow-2xl z-10 backdrop-blur-sm relative"
+      className="h-screen w-full bg-gradient-to-b from-gray-900 via-[#231524] to-gray-800 text-white flex flex-col justify-between p-6 shadow-2xl z-10 backdrop-blur-sm relative"
     >
       {/* Focus Pulse Animation (Creative Deep Work Theme) */}
       <motion.div

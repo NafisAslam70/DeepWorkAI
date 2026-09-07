@@ -168,6 +168,8 @@ function TimerWindow() {
   const overrideMessageTimeRef = useRef(0);
   const [focusSeconds, setFocusSeconds] = useState(0);
   const [distractedSeconds, setDistractedSeconds] = useState(0);
+  const sessionStartedAtRef = useRef(Date.now());
+  const studyElapsedSecondsRef = useRef(0);
   const [summaryMsg, setSummaryMsg] = useState("-");
   const [finalStatus, setFinalStatus] = useState("Waiting...");
   const [finalReason, setFinalReason] = useState("-");
@@ -527,7 +529,10 @@ function TimerWindow() {
     stop();
     if (last30Ref.current.length > 0) summarize15Seconds();
 
-    const startTime = new Date();
+    const totalStudySeconds = studyElapsedSecondsRef.current;
+    const classifiedSeconds = focusSeconds + distractedSeconds;
+    const totalFocusSeconds = focusSeconds + Math.max(0, totalStudySeconds - classifiedSeconds);
+    const startTime = new Date(sessionStartedAtRef.current);
     const focused = focusLog.filter((log) => log.focusState === "Focused").length;
     const distracted = focusLog.length - focused;
     const totalFocusLevel = focusLog.reduce((sum, log) => sum + (log.focusLevel || 0), 0);
@@ -538,7 +543,7 @@ function TimerWindow() {
       projectName,
       sessionNo,
       startTime: startTime.toISOString(),
-      total_focus_time: focusSeconds,
+      total_focus_time: totalFocusSeconds,
       total_distracted_time: distractedSeconds,
       focus_percentage: focusLog.length ? Math.round((focused / focusLog.length) * 100) : 0,
       average_focus_level: averageFocusLevel,
@@ -691,6 +696,7 @@ function TimerWindow() {
       const now = Date.now();
       if (now - lastTime >= 1000) {
         lastTime = now;
+        if (!isBreakTime) studyElapsedSecondsRef.current += 1;
         sendWebcamFrame();
         setTimeRemaining((prev) => {
           if (prev <= 1) {

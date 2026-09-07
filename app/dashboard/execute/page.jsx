@@ -268,15 +268,21 @@ function ExecutePage() {
 
     const timerUrl = `/dashboard/execute/timer-window?${timerParams.toString()}`;
 
+    const screenWidth = window.screen.availWidth;
+    const screenHeight = window.screen.availHeight;
+    const panelWidth = Math.min(screenWidth, Math.max(320, Math.round(screenWidth * 0.2)));
+    const panelLeft = (window.screen.availLeft || 0) + screenWidth - panelWidth;
+    const panelTop = window.screen.availTop || 0;
     const popupFeatures = focusWorkspaceEnabled
-      ? `toolbar=no,scrollbars=no,resizable=yes,width=${window.screen.availWidth},height=${window.screen.availHeight},left=0,top=0`
-      : "toolbar=no,scrollbars=no,resizable=yes,width=800,height=600";
+      ? `popup=yes,toolbar=no,location=no,menubar=no,scrollbars=no,status=no,resizable=yes,width=${screenWidth},height=${screenHeight},left=0,top=0`
+      : `popup=yes,toolbar=no,location=no,menubar=no,scrollbars=no,status=no,resizable=yes,width=${panelWidth},height=${screenHeight},left=${panelLeft},top=${panelTop}`;
 
     timerWindowRef.current = window.open(
       timerUrl,
       "TimerWindow",
       popupFeatures
     );
+    timerWindowRef.current?.focus();
   };
 
   /* ---- Cosmic-Forest background ---- */
