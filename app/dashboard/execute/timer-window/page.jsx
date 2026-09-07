@@ -767,6 +767,16 @@ function TimerWindow() {
           </div>
           <div className="space-y-3">
             <button onClick={handlePauseSession} className="w-full rounded-xl bg-indigo-500 px-3 py-2.5 text-sm font-medium hover:bg-indigo-400"><FaPause className="mr-2 inline" />{isPaused ? "Resume" : "Pause"}</button>
+            {focusWorkspaceEmbedUrl && (
+              <a
+                href={focusWorkspaceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full rounded-xl border border-teal-200/30 bg-teal-300/10 px-3 py-2.5 text-center text-sm font-medium text-teal-100 transition hover:bg-teal-300/20"
+              >
+                Open workspace in a tab ↗
+              </a>
+            )}
             <p className="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-center text-[10px] leading-relaxed text-slate-400">LockedIn Focus stays active until the session is complete. Leaving this window triggers a browser confirmation.</p>
             <details className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs text-slate-200">
               <summary className="cursor-pointer font-medium text-teal-100">Sound & appearance</summary>
@@ -949,6 +959,35 @@ function TimerWindow() {
             </button>
           </div>
         </div>
+        <details className={`mt-3 border-t pt-2 ${mode === "night" ? "border-white/10" : "border-slate-200"}`}>
+          <summary className="cursor-pointer text-xs font-semibold text-teal-500">Session settings</summary>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <button type="button" onClick={toggleMode} className={`rounded-lg border p-2 text-left ${mode === "night" ? "border-white/15 bg-white/10" : "border-slate-200 bg-slate-50"}`}>
+              Theme: {mode === "night" ? "Night" : "Day"}
+            </button>
+            <button type="button" onClick={handleMonitoringToggle} className={`rounded-lg border p-2 text-left ${mode === "night" ? "border-white/15 bg-white/10" : "border-slate-200 bg-slate-50"}`}>
+              Monitoring: {isMonitoringEnabled ? "On" : "Off"}
+            </button>
+            <label className="col-span-2">
+              <span className="mb-1 block opacity-75">Music source</span>
+              <select value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`w-full rounded-lg border p-2 ${mode === "night" ? "border-white/15 bg-white/10 text-white" : "border-slate-200 bg-slate-50"}`}>
+                <option value="ambient">Ambient sounds</option>
+                <option value="motivation-playlist">Motivation playlist</option>
+              </select>
+            </label>
+            {!isMotivationPlaylistEnabled && <label className="col-span-2">
+              <span className="mb-1 block opacity-75">Ambient sound</span>
+              <select value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`w-full rounded-lg border p-2 ${mode === "night" ? "border-white/15 bg-white/10 text-white" : "border-slate-200 bg-slate-50"}`}>
+                <option value="">No sound</option>
+                {sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}
+              </select>
+            </label>}
+            {!isMotivationPlaylistEnabled && <label className="col-span-2">
+              <span className="flex justify-between opacity-75"><span>Volume</span><span>{Math.round(backgroundVolume * 100)}%</span></span>
+              <input type="range" min="0" max="1" step="0.05" value={backgroundVolume} onChange={(e) => handleBackgroundVolumeChange(Number(e.target.value))} className="mt-1 w-full accent-teal-400" />
+            </label>}
+          </div>
+        </details>
       </div>}
 
       {/* Monitoring mode keeps its movable controls. Pomodoro-only mode uses the full screen below. */}
