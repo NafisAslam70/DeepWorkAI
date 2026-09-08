@@ -1234,6 +1234,9 @@ function TimerWindow() {
             <option value="immersive">Immersive layout</option>
             <option value="classic">Classic layout</option>
           </select>
+          <button type="button" onClick={toggleHydrationReminder} className={`rounded-full border border-white/20 px-3 py-2 ${hydrationReminderEnabled ? "bg-cyan-500/30 text-cyan-100" : mode === "night" ? "bg-white/10" : "bg-white/70"}`}>
+            💧 Water {hydrationReminderEnabled ? "on" : "off"}
+          </button>
           <button type="button" role="switch" aria-checked={isMonitoringEnabled} onClick={handleMonitoringToggle} className={`rounded-full border border-white/20 px-3 py-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>Enable monitoring</button>
         </div>
       </main>}
@@ -1260,6 +1263,7 @@ function TimerWindow() {
             {!isMotivationPlaylistEnabled && <select aria-label="Ambient track" value={selectedSound} onChange={(e) => handleSoundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}><option value="">No sound</option>{sounds.map((sound) => <option key={sound.value} value={sound.value}>{sound.label}</option>)}</select>}
             {!isMotivationPlaylistEnabled && <label className={`rounded-lg border border-white/20 p-2 text-left ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>Volume {Math.round(backgroundVolume * 100)}%<input aria-label="Ambient volume" type="range" min="0" max="1" step="0.05" value={backgroundVolume} onChange={(e) => handleBackgroundVolumeChange(Number(e.target.value))} className="mt-1 w-full accent-teal-400" /></label>}
             <select aria-label="Pomodoro background" value={pomodoroBackground} onChange={(e) => handlePomodoroBackgroundChange(e.target.value)} className={`rounded-lg border border-white/20 p-2 ${mode === "night" ? "bg-white/10" : "bg-white/70"}`}>{Object.entries(POMODORO_BACKGROUNDS).map(([value, background]) => <option key={value} value={value}>{background.label}</option>)}</select>
+            <button type="button" onClick={toggleHydrationReminder} className={`rounded-lg border border-white/20 p-2 text-left ${hydrationReminderEnabled ? "bg-cyan-500/30 text-cyan-100" : mode === "night" ? "bg-white/10" : "bg-white/70"}`}>💧 Water: {hydrationReminderEnabled ? `On · ${hydrationIntervalMinutes}m` : "Off"}</button>
           </div>
           <button type="button" onClick={handleMonitoringToggle} className={`mt-4 text-xs underline underline-offset-4 ${mode === "night" ? "text-teal-200" : "text-teal-700"}`}>Enable focus monitoring</button>
         </motion.section>
