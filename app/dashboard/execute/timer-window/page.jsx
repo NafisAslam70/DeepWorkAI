@@ -143,7 +143,7 @@ function TimerWindow() {
   const sessionNo = searchParams.get("sessionNo") || "-";
   const initialNudgeEnabled = searchParams.get("nudgeEnabled") === "true";
   const initialNudgeType = searchParams.get("nudgeType") || "text";
-  const hydrationEnabled = searchParams.get("hydration") === "true";
+  const initialHydrationEnabled = searchParams.get("hydration") === "true";
   const hydrationIntervalMinutes = [30, 45, 60].includes(Number(searchParams.get("hydrationInterval")))
     ? Number(searchParams.get("hydrationInterval"))
     : 45;
@@ -178,6 +178,7 @@ function TimerWindow() {
   const studyElapsedSecondsRef = useRef(0);
   const hydrationElapsedSecondsRef = useRef(0);
   const [showHydrationReminder, setShowHydrationReminder] = useState(false);
+  const [hydrationReminderEnabled, setHydrationReminderEnabled] = useState(initialHydrationEnabled);
   const [summaryMsg, setSummaryMsg] = useState("-");
   const [finalStatus, setFinalStatus] = useState("Waiting...");
   const [finalReason, setFinalReason] = useState("-");
@@ -208,6 +209,16 @@ function TimerWindow() {
       window.speechSynthesis.speak(new SpeechSynthesisUtterance("Please drink water."));
     }
     window.setTimeout(() => setShowHydrationReminder(false), 12000);
+  };
+
+  const toggleHydrationReminder = () => {
+    setHydrationReminderEnabled((enabled) => {
+      if (enabled) {
+        hydrationElapsedSecondsRef.current = 0;
+        setShowHydrationReminder(false);
+      }
+      return !enabled;
+    });
   };
 
   const staticMessages = [
@@ -716,7 +727,7 @@ function TimerWindow() {
         lastTime = now;
         if (!isBreakTime) {
           studyElapsedSecondsRef.current += 1;
-          if (hydrationEnabled) {
+          if (hydrationReminderEnabled) {
             hydrationElapsedSecondsRef.current += 1;
             if (hydrationElapsedSecondsRef.current >= hydrationIntervalMinutes * 60) {
               hydrationElapsedSecondsRef.current = 0;
@@ -755,7 +766,7 @@ function TimerWindow() {
     }, 200);
 
     return () => clearInterval(tickRef.current);
-  }, [isPaused, isBreakTime, currentStudySegment, totalStudyPeriods, selectedSound, isMonitoringEnabled, playBackgroundSound, playEndSound, stop]);
+  }, [isPaused, isBreakTime, currentStudySegment, totalStudyPeriods, selectedSound, isMonitoringEnabled, hydrationReminderEnabled, playBackgroundSound, playEndSound, stop]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   const focusBlocksLeft = totalStudyPeriods - currentStudySegment + (isBreakTime ? 0 : 1);
@@ -1016,6 +1027,9 @@ function TimerWindow() {
             <button type="button" onClick={handleMonitoringToggle} className={`rounded-lg border p-2 text-left ${mode === "night" ? "border-white/15 bg-white/10" : "border-slate-200 bg-slate-50"}`}>
               Monitoring: {isMonitoringEnabled ? "On" : "Off"}
             </button>
+            <button type="button" onClick={toggleHydrationReminder} className={`col-span-2 rounded-lg border p-2 text-left ${hydrationReminderEnabled ? "border-cyan-300 bg-cyan-400/15 text-cyan-500" : mode === "night" ? "border-white/15 bg-white/10" : "border-slate-200 bg-slate-50"}`}>
+              💧 Water reminder: {hydrationReminderEnabled ? `On · every ${hydrationIntervalMinutes} min` : "Off"}
+            </button>
             <label className="col-span-2">
               <span className="mb-1 block opacity-75">Music source</span>
               <select value={isMotivationPlaylistEnabled ? "motivation-playlist" : "ambient"} onChange={(e) => handleMusicSourceChange(e.target.value)} className={`w-full rounded-lg border p-2 ${mode === "night" ? "border-white/15 bg-white/10 text-white" : "border-slate-200 bg-slate-50"}`}>
@@ -1096,6 +1110,17 @@ function TimerWindow() {
                   className={`w-12 h-6 rounded-full p-1 transition-colors ${isMonitoringEnabled ? (mode === "night" ? "bg-teal-500" : "bg-teal-600") : "bg-gray-500"}`}
                 >
                   <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${isMonitoringEnabled ? "translate-x-6" : "translate-x-0"}`} />
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 border-t border-white/15 pt-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className={`text-xs font-semibold ${mode === "night" ? "text-cyan-200" : "text-cyan-700"}`}>💧 Water reminder</p>
+                  <p className={`text-[11px] ${mode === "night" ? "text-gray-300" : "text-gray-600"}`}>{hydrationReminderEnabled ? `Every ${hydrationIntervalMinutes} min` : "Off"}</p>
+                </div>
+                <button type="button" role="switch" aria-checked={hydrationReminderEnabled} onClick={toggleHydrationReminder} className={`h-6 w-12 rounded-full p-1 transition-colors ${hydrationReminderEnabled ? "bg-cyan-500" : "bg-gray-500"}`}>
+                  <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${hydrationReminderEnabled ? "translate-x-6" : "translate-x-0"}`} />
                 </button>
               </div>
             </div>
