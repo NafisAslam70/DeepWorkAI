@@ -146,14 +146,14 @@ export default function Home() {
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="w-full flex items-center">
           <motion.h1
             className="text-2xl font-bold text-indigo-600"
             whileHover={{ scale: 1.05 }}
           >
             DeepWork AI
           </motion.h1>
-          <div className="space-x-4">
+          <div className="ml-auto flex items-center gap-4">
             <Link href="/dashboard">
               <Button className="bg-indigo-500 text-white hover:bg-indigo-600 transition-all duration-300">
                 Dashboard
